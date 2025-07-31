@@ -52,6 +52,4 @@ sudo ./autorun.sh
 
 This project is dual-licensed. Choose one:
 
-- **MIT License** — see [LICENSE](LICENSE)
-- **GNU GPLv3** — see [LICENSE-GPLv3](LICENSE-GPLv3)
-
+- 📘 See full license text: [https://www.gnu.org/licenses/gpl-3.0.en.html](https://www.gnu.org/licenses/gpl-3.0.en.html)
