@@ -41,7 +41,8 @@
 git clone https://github.com/oseliim/LIFTO.git
 
 # Entre no diretório
-cd LIFTO
+cd LiU
 
 # Execute o script de instalação
-sudo ./install.sh
+chmod +x autorun.sh
+sudo ./autorun.sh
