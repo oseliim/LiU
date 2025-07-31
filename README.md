@@ -1,48 +1,57 @@
-# 🧠 LiU — Laboratórios Inteligentes Unificados
+# 🧠 LiU — Unified Intelligent Laboratories
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+&#x20;
 
-**LiU** é uma solução baseada no [LTSP](https://ltsp.org/) que oferece uma **plataforma integrada de gestão laboratorial**, com **interfaces amigáveis** e **ferramentas web** para facilitar a **configuração** e o **monitoramento** dos ambientes de uso.
+**LiU** is a solution based on [LTSP](https://ltsp.org/) that provides an **integrated platform for lab management**, with **user-friendly interfaces** and **web tools** to simplify the **configuration** and **monitoring** of lab environments.
 
-> **💡 Missão:** Reaproveitar equipamentos, otimizar processos e ampliar o acesso à tecnologia por meio da inovação em laboratórios computacionais.
+> **💡 Mission:** Reuse equipment, optimize processes, and expand access to technology through innovation in computer labs.
 
-## 🖼️ Interface do Sistema
-
+## 🖼️ System Interface
 ![Interface do LiU](img/screenshot.png)
+---
+
+## 🚀 Features
+
+- 🌐 Web interface for managing terminals
+- 🖥️ Real-time monitoring of devices
+- 🔧 Tools for automated LTSP client setup
+- ♻️ Reuse of old machines as thin clients
+- 📊 Dashboard with usage statistics
 
 ---
 
-## 🚀 Funcionalidades
-
-- 🌐 Interface web para gestão dos terminais
-- 🖥️ Monitoramento em tempo real dos equipamentos
-- 🔧 Ferramentas para configuração automatizada dos clientes LTSP
-- ♻️ Reaproveitamento de máquinas antigas como terminais leves
-- 📊 Dashboard com estatísticas de uso
-
----
-
-## 🛠️ Tecnologias Utilizadas
+## 🛠️ Technologies Used
 
 - 🐧 **Linux Terminal Server Project (LTSP)**
 - 🐍 Python
-- 🌐 HTML, CSS e JavaScript
+- 🌐 HTML, CSS, and JavaScript
 - 🧰 Bash scripts
-- ⚙️ Flask para geração de páginas dinâmicas
+- ⚙️ Flask for dynamic web pages
 
 ---
 
-## 📦 Instalação
+## 📦 Installation
 
-> **Pré-requisitos:** Ubuntu Server 22.04 ou superior com acesso root.
+> **Prerequisites:** Ubuntu Server 22.04 or higher with root access.
 
 ```bash
-# Clone o repositório
+# Clone the repository
 git clone https://github.com/oseliim/LIFTO.git
 
-# Entre no diretório
+# Enter the directory
 cd LiU
 
-# Execute o script de instalação
+# Run the installation script
 chmod +x autorun.sh
 sudo ./autorun.sh
+```
+
+---
+
+## 📄 License
+
+This project is dual-licensed. Choose one:
+
+- **MIT License** — see [LICENSE](LICENSE)
+- **GNU GPLv3** — see [LICENSE-GPLv3](LICENSE-GPLv3)
+
