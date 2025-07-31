@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratórios Inteligentes do IFTO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="static/css/progress-bars.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4" data-translate="title">Laboratórios Inteligentes do IFTO</h1>
+        <p class="text-center text-muted mb-5" data-translate="subtitle">Assistente de Instalação e Configuração</p>
+        
+        <!-- Progress Steps -->
+        <div class="progress-container mb-5">
+            <div class="progress-step active" data-step="1">
+                <div class="step-circle">1</div>
+                <div class="step-label" data-translate="step1_label">Instalação</div>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-step="2">
+                <div class="step-circle">2</div>
+                <div class="step-label" data-translate="step2_label">Rede</div>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-step="3">
+                <div class="step-circle">3</div>
+                <div class="step-label" data-translate="step3_label">Imagem</div>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-step="3.5">
+                <div class="step-circle">4</div>
+                <div class="step-label" data-translate="step3_5_label">Usuários</div>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-step="4">
+                <div class="step-circle">5</div>
+                <div class="step-label" data-translate="step4_label">Resumo</div>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-step="5">
+                <div class="step-circle">6</div>
+                <div class="step-label" data-translate="step5_label">Configuração</div>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-step="6">
+                <div class="step-circle">7</div>
+                <div class="step-label" data-translate="step6_label">Concluído</div>
+            </div>
+        </div>
+        <!-- Step Content -->
+        <div id="step-content">
+            <!-- Step 1: Standard Packages Installation -->
+            <div class="step-pane active" id="step-1">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title" data-translate="step1_title">Instalação dos Pacotes Padrão</h5>
+                        <p data-translate="step1_description">Clique no botão abaixo para iniciar a instalação dos pacotes padrão necessários para o LTSP.</p>
+                        <button class="btn btn-primary mt-3" id="start-installation-btn" data-translate="start_installation_button">Iniciar Instalação</button>
+                        <div class="progress mt-3" id="installation-progress-bar-container" style="display: none;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="installation-progress-bar">0%</div>
+                        </div>
+                        <div id="installation-output" class="output-area mt-3" style="display: none;"></div>
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="button" class="btn btn-primary next-step-btn" id="step-1-next-btn" data-translate="next_button" style="display: none;">Próximo</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="step-pane" id="step-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title" data-translate="step2_title">Configurações de Rede</h5>
+                        <p data-translate="step2_description_display">Abaixo estão as configurações de rede detectadas para este servidor. Você pode editar estas configurações conforme necessário.</p>
+                        <div id="network-info-loading" class="text-center my-3" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden" data-translate="loading_network_info_text">Coletando e processando informações de rede...</span>
+                            </div>
+                            <p data-translate="loading_network_info_text_long">Coletando e processando informações de rede, por favor aguarde...</p>
+                        </div>
+                        <div id="network-info-display-area" class="mt-3" style="display: none;">
+                            <!-- As informações de rede serão populadas aqui pelo script.js -->
+                        </div>
+                        <div id="network-info-edit-area" class="mt-3" style="display: none;">
+                            <form id="network-form">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="network-interface" class="form-label">Interface de Rede</label>
+                                        <input type="text" class="form-control" id="network-interface" readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="server-ip" class="form-label">Endereço IP</label>
+                                        <input type="text" class="form-control" id="server-ip" pattern="^(\d{1,3}\.){3}\d{1,3}$" required>
+                                        <div class="invalid-feedback">Formato inválido. Use: xxx.xxx.xxx.xxx</div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="netmask" class="form-label">Máscara de Rede</label>
+                                        <input type="text" class="form-control" id="netmask" pattern="^(\d{1,3}\.){3}\d{1,3}$" required>
+                                        <div class="invalid-feedback">Formato inválido. Use: xxx.xxx.xxx.xxx</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="gateway" class="form-label">Gateway Padrão</label>
+                                        <input type="text" class="form-control" id="gateway" pattern="^(\d{1,3}\.){3}\d{1,3}$">
+                                        <div class="invalid-feedback">Formato inválido. Use: xxx.xxx.xxx.xxx</div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="dns-server" class="form-label">Servidor DNS</label>
+                                        <input type="text" class="form-control" id="dns-server" pattern="^(\d{1,3}\.){3}\d{1,3}$">
+                                        <div class="invalid-feedback">Formato inválido. Use: xxx.xxx.xxx.xxx</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="dhcp-range" class="form-label">Faixa DHCP para LTSP</label>
+                                        <input type="text" class="form-control" id="dhcp-range" pattern="^(\d{1,3}\.){3}\d{1,3}\s*-\s*(\d{1,3}\.){3}\d{1,3}$" required>
+                                        <div class="invalid-feedback">Formato inválido. Use: xxx.xxx.xxx.xxx - xxx.xxx.xxx.xxx</div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-success mt-2" id="save-network-changes-btn">Salvar alterações</button>
+                            </form>
+                        </div>
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-outline-primary" id="toggle-network-edit-btn">Editar Configurações</button>
+                        </div>
+                        <div id="network-info-error" class="alert alert-danger mt-3" style="display: none;">
+                            <!-- Mensagens de erro sobre a coleta de rede aqui -->
+                        </div>
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-secondary prev-step-btn" data-translate="previous_button">Voltar</button>
+                            <button type="button" class="btn btn-primary next-step-btn" id="step-2-next-btn" data-translate="next_button">Próximo</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Image Creation -->
+            <div class="step-pane" id="step-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title" data-translate="step3_title">Criação de Imagem</h5>
+                        <form id="image-form">
+                            <div class="mb-3">
+                                <label for="os-selector" class="form-label" data-translate="os_selector_label">Sistema Operacional:</label>
+                                <select class="form-select" id="os-selector">
+                                    <option value="linux" selected data-translate="os_linux">Linux (Ubuntu)</option>
+                                    <option value="windows" data-translate="os_windows_virtualized">Windows (Virtualizado)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="thinorfat" class="form-label" data-translate="thinorfat">Tipo de Cliente</label>
+                                <select class="form-select" id="os-selector">
+                                    <option value="linux" selected data-translate="os_linux">ThinClient</option>
+                                    <option value="windows" data-translate="os_windows_virtualized">FatClient</option>
+                                </select>
+                            </div>
+                            <div id="linux-options">
+                                <div class="mb-3">
+                                    <label for="ubuntu-version" class="form-label" data-translate="ubuntu_version_label">Versão do Ubuntu:</label>
+                                    <select class="form-select" id="ubuntu-version">
+                                        <option value="bionic" data-translate="ubuntu_bionic">Ubuntu 18.04 (Bionic Beaver)</option>
+                                        <option value="jammy" selected data-translate="ubuntu_jammy">Ubuntu 22.04 (Jammy Jellyfish)</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="app-hub" class="form-label" data-translate="app_selection_hub">Aplicações Adicionais:</label>
+                                    <div class="tooltip-container">
+                                        <span class="tooltip-icon">i</span>
+                                        <span class="tooltip-text">Selecione os aplicativos desejados</span>
+                                    </div>
+                                    <div class="mb-3 app-hub">
+                                        <div class="app-option">
+                                            <label class="form-check-label" for="visual-studio-code"><img class="app-logo" src="../static/img/vscode.png" alt="vscode"></label>
+                                            <input class="form-check-input optional-app" type="checkbox" name="visual-studio-code" id="visual-studio-code" value="vscode">
+                                        </div>
+                                        <div class="app-option">
+                                            <label class="form-check-label" for="spotify"><img class="app-logo" src="../static/img/spotify.png" alt="spotify"></label>
+                                            <input class="form-check-input optional-app" type="checkbox" name="spotify" id="spotify" value="spotify">
+                                        </div>
+                                        <div class="app-option">
+    <label class="form-check-label" for="virtualbox">
+        <img class="app-logo" src="../static/img/vm.png" alt="virtual-box">
+    </label>
+    <input class="form-check-input optional-app" type="checkbox" name="virtualbox" id="virtualbox" value="virtualbox">
+</div>
+                                        <div class="app-option">
+                                            <label class="form-check-label" for="vlc"><img class="app-logo" src="../static/img/vlc.png" alt="vlc"></label>
+                                            <input class="form-check-input optional-app" type="checkbox" name="vlc" id="vlc" value="vlc">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" data-translate="desktop_env_label">Ambiente Gráfico:</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="desktopEnvironment" id="desktop-xfce" value="xfce" checked>
+                                        <label class="form-check-label" for="desktop-xfce">Interface mais rápida e leve (XFCE)</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="desktopEnvironment" id="desktop-gdm" value="gdm">
+                                        <label class="form-check-label" for="desktop-gdm"> Interface mais bonita, porém mais exigente (GDM)</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="autologin-check" checked>
+                                <label class="form-check-label" for="autologin-check" data-translate="autologin_label">
+                                    Habilitar autologin para os usuários
+                                </label>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-secondary prev-step-btn" data-translate="previous_button">Voltar</button>
+                                <button type="button" class="btn btn-primary next-step-btn" data-translate="next_button" id="step-3-4-next-btn" disabled>Próximo</button>
+                            </div>
+                              <div id="optional-apps-error" class="text-danger mt-2" style="display: none;"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3.5: User Creation -->
+            <div class="step-pane" id="step-3.5">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title" data-translate="step3_5_title">Configuração de Usuários</h5>
+                        <p data-translate="step3_5_description">Configure os usuários que serão criados no sistema LTSP. Cada usuário deve ter um nome e uma senha.</p>
+                        
+                        <form id="users-form">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6>Geração Automática de Usuários</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <label for="user-prefix" class="form-label">Prefixo para nomes de usuário:</label>
+                                            <input type="text" class="form-control" id="user-prefix" placeholder="Ex: aluno, maquina, cliente">
+                                            <div class="form-text">Os usuários serão nomeados como: prefixo1, prefixo2, etc.</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="user-count-auto" class="form-label">Quantidade de usuários:</label>
+                                            <input type="number" class="form-control" id="user-count-auto" min="1" max="20" value="2">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="default-password" class="form-label">Senha padrão:</label>
+                                            <input type="text" class="form-control" id="default-password" placeholder="Senha para todos os usuários">
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-primary mt-3" id="generate-users-btn">Gerar Usuários</button>
+                                </div>
+                            </div>
+                            
+                            <div id="users-container">
+                                <!-- Usuários serão adicionados aqui dinamicamente pelo JavaScript -->
+                            </div>
+
+                            <div id="users-output" class="mt-3" style="display: none;"></div>
+                            
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="button" class="btn btn-secondary prev-step-btn" data-translate="previous_button">Voltar</button>
+                                <button type="button" class="btn btn-primary next-step-btn" id="step-3-5-next-btn" data-translate="next_button" disabled>Próximo</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Configuration Summary -->
+            <div class="step-pane" id="step-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title" data-translate="step4_title">Resumo das Configurações</h5>
+                        <div id="summary-content">
+                            <!-- Summary will be populated by JS -->
+                        </div>
+                        <div class="d-flex justify-content-between mt-3">
+                            <button type="button" class="btn btn-secondary prev-step-btn" data-translate="previous_button">Voltar</button>
+                            <button type="button" class="btn btn-primary" id="confirm-summary-btn" data-translate="confirm_button">Confirmar e Aplicar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Loading Screen -->
+            <div class="step-pane" id="step-5">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title" data-translate="step5_title">Aplicando Configurações</h5>
+                        <p data-translate="step5_description">Por favor, aguarde enquanto as configurações são aplicadas...</p>
+                        <div class="spinner-border text-primary mt-3" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden" data-translate="loading_text">Loading...</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" id="apply-progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                        </div>
+                        <div id="apply-output" class="output-area"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6: Final Step -->
+            <div class="step-pane" id="step-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="mb-4">
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                        </div>
+                        <h5 class="card-title" data-translate="step6_title">Instalação Concluída!</h5>
+                        <p class="card-text" data-translate="step6_description">O servidor LTSP foi configurado e instalado com sucesso.</p>
+                        <div class="mt-4">
+                            <button type="button" class="btn btn-secondary me-2" id="export-config-btn-final" data-translate="export_button">Exportar Configurações</button>
+                            <button type="button" class="btn btn-primary me-2" id="restart-wizard-btn-final" data-translate="restart_button">Reiniciar Assistente</button>
+                            <a href="interface_gerencia/templates/index.html" class="btn btn-success main-btn" id="go-to-gerencia-btn" style="min-width: 220px; min-height: 60px; font-size: 1.3rem; margin: 1rem 0 1rem 0;">Ir para Interface de Gerência</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </div>
+        <!-- Confirmation Modal -->
+        <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmationModalLabel" data-translate="modal_title">Processo Concluído!</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" data-translate="modal_body">
+                        A configuração do LTSP foi concluída com sucesso.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="export-config-btn" data-translate="export_button">Exportar Configurações</button>
+                        <button type="button" class="btn btn-primary" id="restart-wizard-btn" data-translate="restart_button">Reiniciar Assistente</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+        <script src="static/js/script.js"></script>
+        <script src="static/js/dark_mode.js"></script>
+        <script src="static/js/i18n.js"></script>
+        <div class="logo-container gredes-logo-corner rounded d-flex justify-content-center align-items-center p-3 position-absolute">
+            <img src="../static/img/GREDES.png" alt="GREDES's logo" class="img-fluid logo-image-responsive">
+        </div>
+        <div class="logo-container ifto-logo-corner rounded d-flex justify-content-center align-items-center p-3 position-absolute">
+            <img src="../static/img/IFTO.png" alt="IFTO's logo" class="img-fluid logo-image-responsive">
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,15 @@
+Informações da Interface de Rede Ativa Principal:
+==============================================
+Interface ativa principal (via rota padrão): wlp9s0
+-------------------------------------
+  Interface: wlp9s0
+  Estado: UP
+  IP Address (com CIDR): 192.168.100.64/24
+  Netmask: 255.255.255.0
+  Gateway: 192.168.100.1
+
+-------------------------------------
+Servidores DNS (Configuração Global):
+  DNS (/etc/resolv.conf):
+    - 8.8.4.4
+    - 8.8.8.8

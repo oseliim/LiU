@@ -1,0 +1,11 @@
+#// python
+flask
+subprocess
+os
+loggging
+psutil
+re
+
+#// linux
+#wakeonlan
+#arp-scan

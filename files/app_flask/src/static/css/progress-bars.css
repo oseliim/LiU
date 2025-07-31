@@ -1,0 +1,74 @@
+.progress {
+    height: 25px !important;
+    margin: 1rem auto !important;
+    width: 100% !important;
+    border-radius: 0.375rem !important;
+    background-color: var(--color12) !important;
+    overflow: hidden !important;
+}
+
+.progress-bar {
+    background-color: var(--color15) !important;
+    color: var(--white) !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    line-height: 25px !important;
+    transition: width 0.3s ease !important;
+}
+
+.progress-bar-striped {
+    background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent) !important;
+    background-size: 1rem 1rem !important;
+}
+
+.progress-bar-animated {
+    animation: progress-bar-stripes 1s linear infinite !important;
+}
+
+@keyframes progress-bar-stripes {
+    from { background-position: 1rem 0; }
+    to { background-position: 0 0; }
+}
+
+/* Ajustes específicos para a barra de instalação */
+#installation-progress-bar-container {
+    height: 25px !important;
+    margin: 1rem auto !important;
+    width: 100% !important;
+}
+
+/* Ajustes específicos para a barra de aplicação */
+#step-5 .progress {
+    margin: 1.5rem auto !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+/* Ajustes para o container de saída */
+.output-area {
+    margin: 1rem auto !important;
+    width: 100% !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    border: 1px solid var(--color12) !important;
+    border-radius: 0.375rem !important;
+    padding: 1rem !important;
+    background-color: var(--color11) !important;
+    color: var(--color6) !important;
+    font-family: monospace !important;
+    font-size: 0.9rem !important;
+}
+
+/* Ajustes para modo escuro */
+body.dark-mode .progress {
+    background-color: #3c3c5c !important;
+}
+
+body.dark-mode .progress-bar {
+    background-color: var(--color4) !important;
+}
+
+body.dark-mode .output-area {
+    background-color: #2c2c4a !important;
+    border-color: #3c3c5c !important;
+    color: #f0f0f0 !important;
+}

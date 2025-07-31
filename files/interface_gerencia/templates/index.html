@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status do Laboratório</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=arrow_back_ios" />
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body class="bg-custom-light d-flex flex-column min-vh-100">
+    
+    <div class="main-content flex-grow-1">
+        <div class="box labStatus-box">
+            <h1 class="title">Status do Laboratório</h1>
+            <div id="ip-box">
+                <form id="ip-range-form" class="mb-3">
+                    <label for="ip-range-input" class="form-label"><b>Informe a faixa de IPs do laboratório:</b></label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="ip-range-input" placeholder="Ex: 10.100.64.100 - 10.100.64.150" required>
+                        <button class="btn btn-success" type="submit">Confirmar</button>
+                    </div>
+                    <div class="form-text">Após confirmar, o sistema será configurado e o monitoramento poderá ser iniciado.</div>
+                </form>
+
+                <div id="monitoring-wrapper" class="is-hidden">
+                    <div class="monitoring-controls mb-3">
+                        <button id="startButton" class="btn btn-primary">Iniciar Monitoramento</button>
+                        <button id="stopButton" class="btn btn-danger" disabled>Parar</button>
+                    </div>
+                    <div class="ip-buttons-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="box serverInfo-box view">
+            <h1 class="title">Informações do Servidor</h1>
+
+            <div class="server-info-container row p-3 justify-content-evenly">
+                <div class="col-lg-1 serverInfo-sidemenu d-flex flex-column">
+                    <div class="metric-icon" data-metric="cpu">
+                        <span class="icon">💻</span>
+                        <span class="label">CPU</span>
+                    </div>
+                    <div class="metric-icon" data-metric="memory">
+                        <span class="icon">🧠</span>
+                        <span class="label">Memória</span>
+                    </div>
+                    <div class="metric-icon" data-metric="disk">
+                        <span class="icon">💾</span>
+                        <span class="label">Disco</span>
+                    </div>
+                    <div class="metric-icon" data-metric="network">
+                        <span class="icon">🌐</span>
+                        <span class="label">Rede</span>
+                    </div>
+                </div>
+
+                <div class="col-lg-9">
+                    <div class="serverInfo-content">
+                        <div class="info-default">
+                            <p>Selecione um componente no menu ao lado para visualizar suas informações detalhadas.</p>
+                        </div>
+                        
+                        <div class="info-section" id="cpu-info">
+                            <h2>Informações da CPU</h2>
+                            <div class="performance-graph">
+                                <canvas id="cpuGraph"></canvas>
+                            </div>
+                            <div class="specs-grid">
+                                <div class="spec-row">
+                                    <span class="spec-label">Processador:</span>
+                                    <span class="spec-value" id="cpu-processor">Carregando...</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Núcleos Físicos:</span>
+                                    <span class="spec-value" id="cpu-cores">Carregando...</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Threads:</span>
+                                    <span class="spec-value" id="cpu-threads">Carregando...</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Velocidade:</span>
+                                    <span class="spec-value"id="cpu-frequency">Carregando...</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Uso Geral:</span>
+                                    <span class="spec-value" id="cpu-usage">Carregando...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-section" id="memory-info">
+                            <h2>Informações de Memória</h2>
+                            <div class="performance-graph">
+                                <canvas id="memoryGraph"></canvas>
+                            </div>
+                            <div class="specs-grid">
+                                <div class="spec-row">
+                                    <span class="spec-label">Total:</span>
+                                    <span class="spec-value" id="mem-total">Carregando...</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Em Uso:</span>
+                                    <span class="spec-value" id="mem-used">Carregando...</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Disponível:</span>
+                                    <span class="spec-value" id="mem-available">Carregando...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-section" id="disk-info">
+                            <h2>Informações de Disco</h2>
+                            <div class="specs-grid" id="disk-details">
+                                <p>Carregando partições...</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-section" id="network-info">
+                            <h2>Informações de Rede</h2>
+                            <div class="performance-graph">
+                                <canvas id="networkGraph"></canvas>
+                            </div>
+                            <div class="specs-grid">
+                                <div class="spec-row">
+                                    <span class="spec-label">Upload:</span>
+                                    <span class="spec-value" id="net-upload">Carregando...</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Download:</span>
+                                    <span class="spec-value" id="net-download">Carregando...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-1 serverInfo-sidemenu d-flex flex-column">
+                    <div class="control-btn" id="btn-ligar">
+                        <span class="icon">🔌</span>
+                        <span class="label">Ligar</span>
+                    </div>
+                    <div class="control-btn" id="btn-desligar">
+                        <span class="icon">🌐</span>
+                        <span class="label">Desligar</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="clientMenu-box" class="box mt-4 view is-hidden">
+            <h1 class="title" id="client-menu-title"></h1>
+            <button id="back-to-server-info" class="btn btn-secondary mb-3">Voltar</button>
+
+            <div class="server-info-container row p-3 justify-content-evenly">
+                <div class="col-lg-1 serverInfo-sidemenu d-flex flex-column">
+                    <div class="metric-icon" data-metric="client-cpu">
+                        <span class="icon">💻</span>
+                        <span class="label">CPU</span>
+                    </div>
+                    <div class="metric-icon" data-metric="client-memory">
+                        <span class="icon">🧠</span>
+                        <span class="label">Memória</span>
+                    </div>
+                    <div class="metric-icon" data-metric="client-network">
+                        <span class="icon">🌐</span>
+                        <span class="label">Rede</span>
+                    </div>
+                </div>
+
+                <div class="col-lg-9">
+                    <div class="serverInfo-content">
+                        <div class="info-default active" id="client-info-default">
+                            <p>Selecione um componente no menu ao lado para visualizar suas informações detalhadas.</p>
+                        </div>
+                        
+                        <div class="info-section" id="client-cpu-info">
+                            <h2>Informações da CPU do Cliente</h2>
+                            <div class="performance-graph">
+                                <canvas id="client-cpuGraph"></canvas>
+                            </div>
+                            <div class="specs-grid">
+                                <div class="spec-row">
+                                    <span class="spec-label">Processador:</span>
+                                    <span class="spec-value" id="client-cpu-processor">Carregando...</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Núcleos Físicos:</span>
+                                    <span class="spec-value" id="client-cpu-cores">Carregando...</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Threads:</span>
+                                    <span class="spec-value" id="client-cpu-threads">Carregando...</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Velocidade:</span>
+                                    <span class="spec-value"id="client-cpu-frequency">Carregando...</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Uso Geral:</span>
+                                    <span class="spec-value" id="client-cpu-usage">Carregando...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-section" id="client-memory-info">
+                            <h2>Informações de Memória do Cliente</h2>
+                            <div class="performance-graph">
+                                <canvas id="client-memoryGraph"></canvas>
+                            </div>
+                            <div class="specs-grid">
+                                <div class="spec-row">
+                                    <span class="spec-label">Total:</span>
+                                    <span class="spec-value" id="client-mem-total">Carregando...</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Em Uso:</span>
+                                    <span class="spec-value" id="client-mem-used">Carregando...</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Disponível:</span>
+                                    <span class="spec-value" id="client-mem-available">Carregando...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-section" id="client-network-info">
+                            <h2>Informações de Rede do Cliente</h2>
+                            <div class="performance-graph">
+                                <canvas id="client-networkGraph"></canvas>
+                            </div>
+                            <div class="specs-grid">
+                                <div class="spec-row">
+                                    <span class="spec-label">Upload:</span>
+                                    <span class="spec-value" id="client-net-upload">Carregando...</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Download:</span>
+                                    <span class="spec-value" id="client-net-download">Carregando...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-1 serverInfo-sidemenu d-flex flex-column">
+                    <div class="control-btn" id="client-btn-ligar">
+                        <span class="icon">🔌</span>
+                        <span class="label">Ligar</span>
+                    </div>
+                    <div class="control-btn" id="client-btn-desligar">
+                        <span class="icon">🌐</span>
+                        <span class="label">Desligar</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="box mt-4">
+            <h1>Execução de Comandos</h1>
+            <form id="commandForm">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="commandInput" list="allowedCommands" placeholder="Digite o comando aqui">
+                    <button class="btn btn-primary" type="submit">Executar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="container-fluid text-light py-4 footer-bg-custom d-flex">
+        <div class="d-inline-flex align-items-center justify-content-center p-3 rounded-3 logo-background">
+            <img src="../static/img/LIFTO.png" alt="LIFTO's logo" width="60" height="60">
+        </div>
+    </div>
+
+    <script src="../static/js/script.js"></script>
+    <script src="../static/js/dark_mode.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
