@@ -50,6 +50,4 @@ sudo ./autorun.sh
 
 ## 📄 License
 
-This project is dual-licensed. Choose one:
-
 - 📘 See full license text: [https://www.gnu.org/licenses/gpl-3.0.en.html](https://www.gnu.org/licenses/gpl-3.0.en.html)
