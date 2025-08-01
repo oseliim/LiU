@@ -36,7 +36,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/oseliim/LIFTO.git
+git clone https://github.com/oseliim/LiU
 
 # Enter the directory
 cd LiU
