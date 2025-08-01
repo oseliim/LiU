@@ -79,32 +79,8 @@ LiU/
 
 ---
 
-## Contributing
-
-Contributions are welcome! Please open issues or submit pull requests for improvements, bug fixes, or new features.
-
----
-
-## License
-
-This project is licensed under the MIT License.
-
----
-
 ## Acknowledgements
 
 - [LTSP Project](https://ltsp.org/)
 - [Flask](https://flask.palletsprojects.com/)
 - [Bootstrap](https://getbootstrap.com/)
-
----
-
-## Screenshots
-
-> _Add screenshots of the web interface here for better presentation._
-
----
-
-## Contact
-
-For questions or support, please open an issue on GitHub.
