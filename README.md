@@ -1,7 +1,6 @@
 # 🧠 LiU — Unified Intelligent Laboratories
 
 &#x20;
-UEPAAA
 **LiU** is a solution based on [LTSP](https://ltsp.org/) that provides an **integrated platform for lab management**, with **user-friendly interfaces** and **web tools** to simplify the **configuration** and **monitoring** of lab environments.
 
 > **💡 Mission:** Reuse equipment, optimize processes, and expand access to technology through innovation in computer labs.
