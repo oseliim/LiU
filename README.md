@@ -42,8 +42,11 @@ git clone https://github.com/oseliim/LiU
 cd LiU
 
 # Run the installation script
-chmod +x autorun.sh
-sudo ./autorun.sh
+sudo chmod +x autorun.sh
+
+# Run as a normal user (to open the browser)
+./autorun.sh
+
 ```
 
 ---
