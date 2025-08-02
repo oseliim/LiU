@@ -1,3 +1,7 @@
+import os
+import subprocess
+import re
+
 def run_mac_scanner(output_filename, logger):
     """
     Executa 'arp-scan' para encontrar MACs e os salva em um arquivo.
