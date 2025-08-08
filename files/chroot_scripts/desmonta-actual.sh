@@ -7,44 +7,38 @@ USER=$(who | awk '{print $1}' | grep -vE '^(root|nobody|systemd)' | head -n1)
 
 echo "[INFO] Usuário detectado: $USER"
 
-# 2. Listar e analisar discos físicos
+# 2. Listar e analisar discos físicos e suas partições
 mapfile -t ALL_DISKS < <(lsblk -ndo NAME,TYPE | awk '$2 == "disk" { print "/dev/" $1 }')
 
 for d in "${ALL_DISKS[@]}"; do
-  PART="${d}1"
-  fs=$(lsblk -no FSTYPE "$PART" 2>/dev/null || echo "Nenhum")
-  label=$(lsblk -no LABEL "$PART" 2>/dev/null || echo "")
-  echo
   echo "Disco encontrado: $d"
-  echo "  Partição: $PART"
-  echo "  FS: ${fs:-Desconhecido} | Label: ${label:-<sem nome>}"
-
-  #read -rp "👉 Deseja usar este disco para montar /home? [s/N]: " resposta
-  resposta="s"
-  if [[ "$resposta" =~ ^[Ss]$ ]]; then
-    DISCOS+=("$d")
+  mapfile -t PARTICOES < <(lsblk -lnpo NAME,FSTYPE,LABEL "$d" | awk '$2 != "" { printf "  Partição: %s | FS: %s | Label: %s\n", $1, $2, ($3 == "" ? "<sem nome>" : $3) }')
+  if [ "${#PARTICOES[@]}" -gt 0 ]; then
+    printf '%s\n' "${PARTICOES[@]}"
+  else
+    echo "  [INFO] Nenhuma partição com FS detectada"
   fi
 done
 
-# 3. Validar escolha
-if [ "${#DISCOS[@]}" -eq 0 ]; then
-  echo "[ABORTADO] Nenhum disco selecionado para uso."
-  exit 0
+# 3. Selecionar maior partição ext4 disponível
+echo "[INFO] Buscando partições ext4 disponíveis..."
+
+mapfile -t EXT4_PARTS < <(
+  lsblk -rno NAME,FSTYPE,SIZE,MOUNTPOINT | \
+  awk '$2 == "ext4" && $4 == "" { printf "/dev/%s %s\n", $1, $3 }' | \
+  sort -k2 -h -r
+)
+
+if [ "${#EXT4_PARTS[@]}" -eq 0 ]; then
+  echo "[ERRO] Nenhuma partição ext4 disponível encontrada."
+  exit 1
 fi
 
-DISCO="${DISCOS[0]}"
-PART="${DISCO}1"
+PART=$(echo "${EXT4_PARTS[0]}" | awk '{print $1}')
+DISCO="/dev/$(lsblk -no PKNAME "$PART")"
+echo "[INFO] Maior partição ext4 disponível: $PART (disco: $DISCO)"
 
-# 4. Criar e formatar partição, se necessário
-if ! lsblk -no FSTYPE "$PART" 2>/dev/null | grep -q ext4; then
-  echo "[INFO] Criando partição ext4 em $PART..."
-  parted "$DISCO" --script mklabel gpt mkpart primary ext4 0% 100%
-  mkfs.ext4 -F "$PART"
-else
-  echo "[INFO] Partição $PART já formatada com ext4"
-fi
-
-# 5. Desmontar /home atual (overlay, tmpfs, NFS etc.)
+# 4. Desmontar /home atual (overlay, tmpfs, NFS etc.)
 if mountpoint -q /home; then
   fstype=$(findmnt -n -o FSTYPE /home)
   if [[ "$fstype" != "ext4" ]]; then
@@ -53,11 +47,11 @@ if mountpoint -q /home; then
   fi
 fi
 
-# 6. Montar partição escolhida em /home
+# 5. Montar partição escolhida em /home
 echo "[INFO] Montando $PART em /home"
 mount "$PART" /home
 
-# 7. Criar /home/$USER se não existir, e copiar /etc/skel
+# 6. Criar /home/$USER se não existir, e copiar /etc/skel
 if [ ! -d "/home/$USER" ]; then
   echo "[INFO] Criando diretório /home/$USER e populando com /etc/skel"
   mkdir -p "/home/$USER"
@@ -66,7 +60,7 @@ fi
 
 chown -R "$USER:$USER" "/home/$USER"
 
-# 8. Atualizar diretórios XDG
+# 7. Atualizar diretórios XDG
 echo "[INFO] Atualizando diretórios do usuário com xdg-user-dirs-update"
 sudo -u "$USER" env HOME="/home/$USER" xdg-user-dirs-update
 
