@@ -1,0 +1,2 @@
+maquina01:maquina01
+maquina02:maquina02

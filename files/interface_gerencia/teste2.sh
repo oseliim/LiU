@@ -83,7 +83,7 @@ install_psutil_if_needed() {
     echo "[INFO] Verificando Flask..."
     if ! python3 -c "import psutil" &> /dev/null; then
         echo "[INFO] psutil não encontrado. Instalando..."
-        sudo pip3 install psutil
+        sudo pip3 install flask
         if [ $? -ne 0 ]; then
             echo "[ERRO] Falha ao instalar o psutil. Abortando."
             exit 1
@@ -93,18 +93,18 @@ install_psutil_if_needed() {
     fi
 }
 
-# Instala o subprocess se necessário
-install_subprocess_if_needed() {
-    echo "[INFO] Verificando subprocess..."
-    if ! python3 -c "import subprocess" &> /dev/null; then
-        echo "[INFO] subprocess não encontrado. Instalando..."
-        sudo pip3 install subprocess
+# Instala o subproccess se necessário
+install_psutil_if_needed() {
+    echo "[INFO] Verificando subproccess..."
+    if ! python3 -c "import subproccess" &> /dev/null; then
+        echo "[INFO] subproccess não encontrado. Instalando..."
+        sudo pip3 install flask
         if [ $? -ne 0 ]; then
-            echo "[ERRO] Falha ao instalar o subprocess. Abortando."
+            echo "[ERRO] Falha ao instalar o subproccess. Abortando."
             exit 1
         fi
     else
-        echo "[INFO] subprocess já está instalado."
+        echo "[INFO] subproccess já está instalado."
     fi
 }
 
@@ -113,7 +113,7 @@ install_os_if_needed() {
     echo "[INFO] Verificando os..."
     if ! python3 -c "import os" &> /dev/null; then
         echo "[INFO] os não encontrado. Instalando..."
-        sudo pip3 install os
+        sudo pip3 install flask
         if [ $? -ne 0 ]; then
             echo "[ERRO] Falha ao instalar o os. Abortando."
             exit 1
@@ -128,7 +128,7 @@ install_logging_if_needed() {
     echo "[INFO] Verificando logging..."
     if ! python3 -c "import logging" &> /dev/null; then
         echo "[INFO] logging não encontrado. Instalando..."
-        sudo pip3 install logging
+        sudo pip3 install flask
         if [ $? -ne 0 ]; then
             echo "[ERRO] Falha ao instalar o logging. Abortando."
             exit 1
@@ -143,7 +143,7 @@ install_re_if_needed() {
     echo "[INFO] Verificando re..."
     if ! python3 -c "import re" &> /dev/null; then
         echo "[INFO] re não encontrado. Instalando..."
-        sudo pip3 install re
+        sudo pip3 install flask
         if [ $? -ne 0 ]; then
             echo "[ERRO] Falha ao instalar o re. Abortando."
             exit 1
@@ -164,12 +164,12 @@ install_pip_if_needed
 install_flask_if_needed
 install_cpuinfo_if_needed  # <-- Nova função adicionada
 install_psutil_if_needed
-install_subprocess_if_needed
+install_subproccess_if_needed
 install_os_if_needed
 install_logging_if_needed
 install_re_if_needed
 
-pkexec python3 $DIR/app.py &  # Executa em segundo plano
+sudo python3 $DIR/app.py &  # Executa em segundo plano
 
 # Aguarda um pouco para os servidores iniciarem
 sleep 4

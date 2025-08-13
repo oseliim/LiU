@@ -3,13 +3,6 @@ import os
 import subprocess
 from flask import Flask, render_template, jsonify, request, Response
 
-# Importando módulos personalizados
-try:
-    import mac_scanner
-except ImportError:
-    mac_scanner = None
-    print("Warning: mac_scanner module not found. Some features may not work.")
-
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -24,20 +17,6 @@ AUTO_INSTALL_SCRIPT = os.path.join(BASE_PROJECT_DIR, "auto_install.sh")
 NETWORK_SCRIPT = os.path.join(BASE_PROJECT_DIR, "network.sh")
 MONTAR_CONF_SCRIPT = os.path.join(BASE_PROJECT_DIR, "montar_conf.sh")
 IPXE_MENU = os.path.join(BASE_PROJECT_DIR, "ipxe_menu.sh")
-EXPRESSSO_SCRIPT = os.path.join(BASE_PROJECT_DIR, "expresso.sh")
-MAC_FILE = os.path.join(BASE_PROJECT_DIR, "interface_gerencia", "scripts", "mac_maquinas")
-
-@app.route('/expresso')
-def expresso():
-    if mac_scanner:
-        mac_scanner.run_mac_scanner(MAC_FILE, app.logger)
-    else:
-        app.logger.warning("mac_scanner module not found. Skipping MAC scan.")
-    return Response(stream_script_output(
-        ["pkexec", "bash", EXPRESSSO_SCRIPT],
-        "Instalação expressa concluída com sucesso!",
-        "Erro durante a instalação expressa"
-    ), mimetype='text/html')
 
 @app.route('/')
 def index():
@@ -220,12 +199,7 @@ def run_auto_install():
     if not os.path.exists(AUTO_INSTALL_SCRIPT):
         return Response(f"<p style='color:red;'>Erro: Script auto_install.sh não encontrado em {AUTO_INSTALL_SCRIPT}</p>", mimetype='text/html', status=404)
     command = ["sudo", "bash", AUTO_INSTALL_SCRIPT]
-    if mac_scanner:
-        mac_scanner.run_mac_scanner(MAC_FILE, app.logger)
-    else:
-        app.logger.warning("mac_scanner module not found. Skipping MAC scan.")
     return Response(stream_script_output(command, success_message="Instalação do LTSP concluída com sucesso!"), mimetype='text/html')
-
 @app.route('/run_network_info', methods=['POST'])
 def run_network_info():
     if not os.path.exists(NETWORK_SCRIPT):
@@ -259,7 +233,6 @@ def save_network_config():
         return jsonify({"success": True, "message": "Configurações de rede salvas com sucesso"})
     else:
         return jsonify({"error": "Falha ao salvar configurações de rede no arquivo"}), 500
-
 @app.route('/run_all_configurations', methods=['POST'])
 def run_all_configurations():
     """
@@ -439,11 +412,6 @@ def run_all_configurations():
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.INFO)
-    # Ensure templates and static folders exist
-    if not os.path.isdir(os.path.join(os.path.dirname(__file__), 'templates')):
-        os.makedirs(os.path.join(os.path.dirname(__file__), 'templates'), exist_ok=True)
-    if not os.path.isdir(os.path.join(os.path.dirname(__file__), 'static')):
-        os.makedirs(os.path.join(os.path.dirname(__file__), 'static'), exist_ok=True)
     app.logger.info(f"BASE_PROJECT_DIR: {BASE_PROJECT_DIR}")
     app.logger.info(f"AUTO_INSTALL_SCRIPT path: {AUTO_INSTALL_SCRIPT}")
     app.logger.info(f"DNSMASQ_CONF_SCRIPT path: {DNSMASQ_CONF_SCRIPT}")
