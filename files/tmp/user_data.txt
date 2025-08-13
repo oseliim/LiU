@@ -1,2 +1,4 @@
 maquina01:maquina01
 maquina02:maquina02
+asdasd1:214342
+asdasd2:214342
