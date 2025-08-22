@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Interface de Gerenciamento
+Comment=Atalho para abrir a Gerencia
+Exec=$DIR/files/open_gerencia.sh
+Icon=$DIR/files/LIFTO_ICON_NEW.png
+Terminal=false

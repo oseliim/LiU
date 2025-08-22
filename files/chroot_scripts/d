@@ -1,3 +1,0 @@
-ethtool -s enp3s0f0 wol g
-poweroff
-

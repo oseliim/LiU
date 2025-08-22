@@ -37,23 +37,7 @@ cat << 'EOF' > "$CHROOT_DIR/usr/local/bin/start_user_vm.sh"
 
 VM_NAME="VM-$(whoami)"
 
-VBoxManage setextradata "$VM_NAME" "GUI/ShowMiniToolBar" "no"
-VBoxManage setextradata "$VM_NAME" "GUI/Fullscreen" "on"
-VBoxManage setextradata "$VM_NAME" "GUI/Seamless" "off"
-VBoxManage setextradata "$VM_NAME" "GUI/FullscreenTransition" "false"
-VBoxManage setextradata "$VM_NAME" "GUI/Animation" "off"
-VBoxManage setextradata "$VM_NAME" "GUI/SuppressMessages" "confirmGoingFullscreen,removableDevice"
 
-#Definindo recursos
-TOTAL_RAM_MB=$(free -m | grep Mem: | tr -s ' ' | cut -d ' ' -f 2)
-ALLOC_RAM_MB=$(( TOTAL_RAM_MB * 75 / 100 ))
-TOTAL_CPUS=$(nproc)
-ALLOC_CPUS=$(( TOTAL_CPUS * 75 / 100 ))
-
-VBoxManage modifyvm "$VM_NAME" --memory "$ALLOC_RAM_MB" --cpus "$ALLOC_CPUS"
-
-# Inicia a VM no modo GUI
-VBoxManage startvm "$VM_NAME" --type gui
 EOF
 
 chmod +x "$CHROOT_DIR/usr/local/bin/start_user_vm.sh"
@@ -83,16 +67,17 @@ chroot "$CHROOT_DIR" /bin/bash -c "
   apt install -y adwaita-icon-theme gnome-themes-extra
 
   # Virtualização
-  apt install virtualbox -y
+  #apt install -y qemu qemu-kvm libvirt-daemon libvirt-daemon-system virtinst
+
 
   # Garante que a linha XKBLAYOUT seja substituída
   sed -i 's/^XKBLAYOUT=.*/XKBLAYOUT="br"/' /etc/default/keyboard
 "
 
 # --- Desmontagem ---
-echo "[11] Desmontando bind mounts..."
-for fs in dev proc sys; do
- umount "$CHROOT_DIR/$fs" || true
-done
+#echo "[11] Desmontando bind mounts..."
+#for fs in dev proc sys; do
+ #umount "$CHROOT_DIR/$fs" || true
+#done
 
-ltsp image $CHROOT_DIR
+#ltsp image $CHROOT_DIR

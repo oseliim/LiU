@@ -1,5 +1,0 @@
-NOTAS DE VERSÃO:
-
-* Agora o autoinstall ja adiciona xorg como display manager default no ltsp.conf;
-* O gera windows tem implementação de montagem de disco dos alunos01 a aluno20, o script implementado foi o desmonta_home.sh no /bin;
-* O gera windows e o gera gdm estão atualizados para garantir sessão gráfica no tty1

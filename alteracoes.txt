@@ -1,0 +1,15 @@
+
+INTERFACE:
+
+ - Remoção dos botões de parar verificação de status e inicialização individual;
+ - Remoção dos gráficos de desempenho do cliente;
+ - Adição dos botões de desligamento e inicialização de rede;
+ - Adição do campo de execução de comandos individuais;
+ 
+BACKEND:
+
+ - Remoção dos scripts de parada de veificação de status;
+ - Remoção dos scripts de verificação de desempenho do cliente;
+ - Adição dos scripts de desligamento e incialização de rede;
+ - Adição do script de execução de comandos individuais;
+

@@ -13,6 +13,11 @@ IP_CIDR=""
 DEFAULT_GATEWAY=""
 DNS_SERVERS=""
 
+# Permitir passar RANGE_INICIO e RANGE_FIM como argumentos
+ARG_RANGE_INICIO="$1"
+ARG_RANGE_FIM="$2"
+ARG_DNS_SERVER="$3"
+
 if [ ! -f "$network_output_file" ]; then
     echo "⚠️ Arquivo de dados de rede não encontrado (${network_output_file}). Usando configurações padrão."
     # Definir padrões
@@ -48,6 +53,8 @@ else
     RANGE_INICIO="${NETWORK_PREFIX}.100"
     RANGE_FIM="${NETWORK_PREFIX}.150"
 fi
+
+# Usa o DNS passado como argumento, senão o primeiro DNS encontrado ou o padrão (Google)
 if [ -n "$ARG_DNS_SERVER" ]; then
     IP_DNS="$ARG_DNS_SERVER"
 elif [ -z "$DNS_SERVERS_LIST" ]; then

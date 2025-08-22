@@ -2,17 +2,27 @@
 # gera_xfce.sh
 # Gera ambiente chroot LTSP para Ubuntu com XFCE e configurações personalizadas
 
-#set -euo pipefail
+set -euo pipefail
 
 # Processamento de parâmetros
 UBUNTU_VERSION="jammy"  # Padrão: Ubuntu 22.04 (Jammy)
-
+AUTOLOGIN=false
+HIDE_USERS=false
+USER="aluno"
 
 # Verificar parâmetros
 while [[ $# -gt 0 ]]; do
   case $1 in
     bionic|jammy)
       UBUNTU_VERSION="$1"
+      shift
+      ;;
+    --autologin)
+      AUTOLOGIN=true
+      shift
+      ;;
+    --hide-users)
+      HIDE_USERS=true
       shift
       ;;
     *)
@@ -32,7 +42,6 @@ echo "[INFO] Usuário principal: $USER"
 DISTRO="ubuntuxfce"
 RELEASE="$UBUNTU_VERSION"
 CHROOT_DIR="/srv/ltsp/${DISTRO}_${RELEASE}"
-NAME="${DISTRO}_${RELEASE}"
 ARCH="amd64"
 PASSWORD="$USER"  # Por compatibilidade, mantém a senha igual ao nome de usuário
 MIRROR="http://ubuntu.c3sl.ufpr.br/ubuntu/"
@@ -216,7 +225,11 @@ ltsp image "$CHROOT_DIR"
 echo "[11] Atualizando initrd e serviços de rede..."
 bash reinicia.sh
 
-# --- Gerando Menu IPXE customizado ---
-bash ipxe_menu.sh $NAME
-
-echo "✅ Ambiente LTSP ${UBUNTU_VERSION^} com XFCE pronto para o usuário"
+echo "✅ Ambiente LTSP ${UBUNTU_VERSION^} com XFCE pronto para o usuário '$USER'."
+if [ "$AUTOLOGIN" = true ]; then
+  echo "   ✓ Autologin ativado para o usuário $USER"
+fi
+if [ "$HIDE_USERS" = true ]; then
+  echo "   ✓ Ocultação de usuários ativada"
+fi
+echo "Reinicie os terminais PXE para testar."

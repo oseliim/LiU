@@ -33,8 +33,6 @@ mkdir -p /srv/tftp/ltsp/pxelinux.cfg
 wget -q https://ltsp.org/guides/pxelinux.txt -O /srv/tftp/ltsp/pxelinux.cfg/default
 
 echo "[INFO] Configurando DNS..."
-systemctl stop systemd-resolved
-systemctl disable systemd-resolved
 rm -f /etc/resolv.conf
 echo -e "nameserver 8.8.8.8\nnameserver 8.8.4.4" > /etc/resolv.conf
 
@@ -51,7 +49,6 @@ RELOGIN=1
 HOSTNAME=lifto
 LIGHTDM_CONF="greeter-hide-users=true"
 DNS_SERVER="8.8.8.8"
-GDM3_CONF="WaylandEnable=false"
 
 [clients]
 EOF

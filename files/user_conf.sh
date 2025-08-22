@@ -74,6 +74,6 @@ else
         echo "🔄 Entrada atualizada para '$USUARIO' em $USER_DATA_FILE (caso raro: usuário não existia no sistema mas existia no arquivo)."
     fi
 fi
-bash montar_conf.sh $USUARIO $SENHA
+
 echo "🎉 Processo concluído para o usuário '$USUARIO'!"
 

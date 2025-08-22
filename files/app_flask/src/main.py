@@ -5,8 +5,6 @@ from flask import Flask, render_template, jsonify, request, Response
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-app = Flask(__name__, template_folder='templates', static_folder='static')
-
 BASE_PROJECT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 NETWORK_DATA_FILE = os.path.join(BASE_PROJECT_DIR, "tmp", "network_data.txt")
 DNSMASQ_CONF_SCRIPT = os.path.join(BASE_PROJECT_DIR, "dnsmasq_conf.sh")
@@ -17,6 +15,19 @@ AUTO_INSTALL_SCRIPT = os.path.join(BASE_PROJECT_DIR, "auto_install.sh")
 NETWORK_SCRIPT = os.path.join(BASE_PROJECT_DIR, "network.sh")
 MONTAR_CONF_SCRIPT = os.path.join(BASE_PROJECT_DIR, "montar_conf.sh")
 IPXE_MENU = os.path.join(BASE_PROJECT_DIR, "ipxe_menu.sh")
+
+TEMPLATE_DIR = os.path.join(BASE_PROJECT_DIR, 'app_flask', 'src', 'templates')
+STATIC_DIR   = os.path.join(BASE_PROJECT_DIR, 'app_flask', 'src', 'static')
+
+app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
+
+app.logger.info(f"ROOT_PATH: {app.root_path}")
+app.logger.info(f"TEMPLATE_DIR: {TEMPLATE_DIR}  exists={os.path.isdir(TEMPLATE_DIR)}")
+app.logger.info(f"STATIC_DIR:   {STATIC_DIR}    exists={os.path.isdir(STATIC_DIR)}")
+try:
+    app.logger.info(f"templates list: {os.listdir(TEMPLATE_DIR)}")
+except Exception as e:
+    app.logger.error(f"listdir templates falhou: {e}")
 
 @app.route('/')
 def index():

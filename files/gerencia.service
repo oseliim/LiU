@@ -1,0 +1,13 @@
+[Unit]
+Description=Rodar gerência no boot
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c 'caminho=$(find / -type f -name "run.sh" | head -n 1) && bash "$caminho"'
+Restart=on-failure
+WorkingDirectory=/tmp
+
+[Install]
+WantedBy=multi-user.target
+

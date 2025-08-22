@@ -312,6 +312,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const turnOnBtn = document.getElementById('btn-ligar');
     const turnOffBtn = document.getElementById('btn-desligar');
     const turnOffOneBtn = document.getElementById('client-btn-desligar');
+    const turnOnNetBtn = document.getElementById('btn-ligar-internet');
+    const turnOffNetBtn = document.getElementById('btn-desligar-internet');
 
     let outputDiv;
     if (turnOnBtn || turnOffBtn) {
@@ -378,6 +380,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    if (turnOffNetBtn) {
+        turnOffNetBtn.addEventListener('click', () => executeScript('/turn_off_internet'));
+    }
+    if (turnOnNetBtn) {
+        turnOnNetBtn.addEventListener('click', () => executeScript('/turn_on_internet'));
+    }
 
     const commandForm = document.getElementById('commandForm');
     if (commandForm) {
@@ -419,6 +427,47 @@ document.addEventListener('DOMContentLoaded', function() {
                 if(outputDiv) outputDiv.innerHTML += `<p style='color:red;'>Erro de rede: ${error.message}</p>`;
             });
 
+            commandInput.value = '';
+        });
+    }
+
+    const commandFormIndividual = document.getElementById('commandForm-individual');
+    if (commandFormIndividual) {
+        commandFormIndividual.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const commandInput = document.getElementById('commandInput-individual');
+            if (!commandInput || !commandInput.value) {
+                alert('Por favor, digite um comando.');
+                return;
+            }
+
+            const command = commandInput.value;
+
+            if (!outputDiv) return;
+
+            outputDiv.innerHTML = `<p>Executando comando: ${command} na máquina ${activeClientIp}...</p>`;
+            fetch('/execute_one', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ executed_command: command, ip: activeClientIp })
+            })
+            .then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                outputDiv.innerHTML = '';
+                function readChunk() {
+                    reader.read().then(({value, done}) => {
+                        if (done) return;
+                        outputDiv.innerHTML += decoder.decode(value, {stream: true}).replace(/\n/g, '<br>');
+                        outputDiv.scrollTop = outputDiv.scrollHeight;
+                        readChunk();
+                    });
+                }
+                readChunk();
+            })
+            .catch(error => {
+                if(outputDiv) outputDiv.innerHTML += `<p style='color:red;'>Erro de rede: ${error.message}</p>`;
+            });
             commandInput.value = '';
         });
     }
@@ -497,7 +546,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         startButton.disabled = true;
-        stopButton.disabled = false;
         
         document.querySelectorAll('.ip-button').forEach(btn => {
             btn.classList.remove('status-on', 'status-off');
@@ -530,24 +578,11 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log("Monitoring stream closed by server. Re-enabling start button.");
             eventSource.close();
             startButton.disabled = false;
-            stopButton.disabled = true;
         };
     }
 
-    function stopMachineMonitoring() {
-        if (eventSource) {
-            eventSource.close();
-            console.log("Monitoring stopped by user.");
-            startButton.disabled = false;
-            stopButton.disabled = true;
-        }
-    }
-    
     if (startButton) {
         startButton.addEventListener('click', startMachineMonitoring);
-    }
-    if (stopButton) {
-        stopButton.addEventListener('click', stopMachineMonitoring);
     }
 
     // --- INICIALIZAÇÃO DA PÁGINA ---

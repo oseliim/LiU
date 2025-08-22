@@ -1,15 +1,18 @@
 Informações da Interface de Rede Ativa Principal:
 ==============================================
-Interface ativa principal (via rota padrão): wlp9s0
+Interface ativa principal (via rota padrão): enp0s31f6
 -------------------------------------
-  Interface: wlp9s0
+  Interface: enp0s31f6
   Estado: UP
-  IP Address (com CIDR): 192.168.100.64/24
+  IP Address (com CIDR): 192.168.15.9/24
   Netmask: 255.255.255.0
-  Gateway: 192.168.100.1
+  Gateway: 192.168.15.1
 
 -------------------------------------
 Servidores DNS (Configuração Global):
   DNS (/etc/resolv.conf):
+    - 127.0.0.53
+  DNS (systemd-resolve da interface enp0s31f6):
     - 8.8.4.4
     - 8.8.8.8
+-------------------------------------

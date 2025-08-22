@@ -1,8 +1,5 @@
 #!/bin/bash
 
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-APP_PATH="files/app_flask/src/main.py"
-
 # Verifica se um comando existe
 command_exists() {
     command -v "$1" &> /dev/null
@@ -44,30 +41,44 @@ install_flask_if_needed() {
     fi
 }
 
-# ---- Execução ----
+# Instala o cpuinfo se necessário
+install_cpuinfo_if_needed() {
+    echo "[INFO] Verificando cpuinfo..."
+    if ! python3 -c "import cpuinfo" &> /dev/null; then
+        echo "[INFO] cpuinfo não encontrado. Instalando..."
+        sudo pip3 install py-cpuinfo
+        if [ $? -ne 0 ]; then
+            echo "[ERRO] Falha ao instalar o cpuinfo. Abortando."
+            exit 1
+        fi
+    else
+        echo "[INFO] cpuinfo já está instalado."
+    fi
+}
 
+# Instala o psutil se necessário
+install_psutil_if_needed() {
+    python3 -c "import psutil" 2>/dev/null
+    if [ $? -ne 0 ]; then
+        echo "psutil não encontrado. Instalando..."
+        pip3 install psutil
+    else
+        echo "psutil já está instalado."
+    fi
+}
+
+# ---- Execução Principal ----
+
+# Instala dependências
 install_python_if_needed
 install_pip_if_needed
 install_flask_if_needed
+install_cpuinfo_if_needed  # <-- Nova função adicionada
+install_psutil_if_needed   # <-- Mais uma
 
-echo "[INFO] Iniciando aplicação Flask com pkexec..."
-pkexec python3 "$DIR/$APP_PATH" &
-#pkexec bash "$DIR/files/interface_gerencia/run.sh" &
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" #Encontra o caminho do arquivo (adicionado 15/08/2025)
 
-echo "[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Interface de Gerenciamento
-Comment=Atalho para abrir a Gerencia
-Exec=$DIR/files/open_gerencia.sh
-Icon=$DIR/files/LIFTO_ICON_NEW.png
-Terminal=false" > $HOME/Desktop/Gerencia.desktop
+python3 "$DIR/app.py" & #Roda em background
 
-pkexec chmod +x $HOME/Desktop/Gerencia.desktop
-
-pkexec $DIR/files/create_service.sh
-
-xdg-open "http://127.0.0.1:5001"
-sleep 2
-
+# Mantém o script rodando até que ambos os processos terminem
 wait

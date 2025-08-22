@@ -1,0 +1,86 @@
+MENU TITLE PXELinux boot menu
+UI isolinux/menu.c32
+TIMEOUT 50
+F1 pxelinux.cfg/default
+
+LABEL -
+	MENU LABEL Boot an image from the network in LTSP mode:
+
+LABEL x86_32_22.04
+	MENU DEFAULT
+	MENU LABEL Ubuntu 22.04 GERAL (64 bit)
+	TEXT HELP
+		Boots /srv/ltsp/images/LabMatica_22_04.img via NFS.
+	ENDTEXT
+	MENU INDENT 2
+	KERNEL LabMatica_22_04/vmlinuz
+	APPEND root=/dev/nfs nfsroot=/srv/ltsp ltsp.image=images/LabMatica_22_04.img loop.max_part=9
+	INITRD ltsp.img,LabMatica_22_04/initrd.img
+	IPAPPEND 3
+
+LABEL x86_32_22.04_EVE
+#	MENU DEFAULT
+	MENU LABEL Ubuntu 22.04 EVE (64 bit)
+	TEXT HELP
+		Boots /srv/ltsp/images/LabMatica_22_04_EVE.img via NFS.
+	ENDTEXT
+	MENU INDENT 2
+	KERNEL LabMatica_22_04_EVE/vmlinuz
+	APPEND root=/dev/nfs nfsroot=/srv/ltsp ltsp.image=images/LabMatica_22_04_EVE.img loop.max_part=9
+	INITRD ltsp.img,LabMatica_22_04_EVE/initrd.img
+	IPAPPEND 3
+
+LABEL x86_64_20_04
+#	MENU DEFAULT
+	MENU LABEL Ubuntu 20.04 GERAL (64 bit)
+	TEXT HELP
+		Boots /srv/ltsp/images/LabMatica_20_04.img via NFS.
+	ENDTEXT
+	MENU INDENT 2
+	KERNEL LabMatica_20_04/vmlinuz
+	APPEND root=/dev/nfs nfsroot=/srv/ltsp ltsp.image=images/LabMatica_20_04.img loop.max_part=9
+	INITRD ltsp.img,LabMatica_20_04/initrd.img
+	IPAPPEND 3
+
+LABEL x86_64_22_04_Windows
+#	MENU DEFAULT
+	MENU LABEL Windows (64 bit)
+	TEXT HELP
+		Boots /srv/ltsp/images/windows.img via NFS.
+	ENDTEXT
+	MENU INDENT 2
+	KERNEL LabMatica_22_04/vmlinuz
+	APPEND root=/dev/nfs nfsroot=/srv/ltsp ltsp.image=images/windows.img loop.max_part=9
+	INITRD ltsp.img,LabMatica_22_04/initrd.img
+	IPAPPEND 3
+
+#LABEL x86_64_16_04
+#	MENU DEFAULT
+#	MENU LABEL Ubuntu 16.04 (64 bit)
+#	TEXT HELP
+#		Boots /srv/ltsp/images/LabMatica_16_04.img via NFS.
+#	ENDTEXT
+#	MENU INDENT 2
+#	KERNEL LabMatica_16_04/vmlinuz
+#	APPEND root=/dev/nfs nfsroot=/srv/ltsp ltsp.image=images/LabMatica_16_04.img loop.max_part=9
+#	INITRD ltsp.img,LabMatica_16_04/initrd.img
+#	IPAPPEND 3
+
+MENU SEPARATOR
+
+LABEL -
+	MENU LABEL Other options:
+	MENU DISABLE
+
+LABEL memtest86+
+	MENU LABEL ^Memory test
+	MENU INDENT 2
+	KERNEL memtest.0
+
+LABEL hd00
+#	MENU DEFAULT
+	MENU LABEL Boot from the first local ^disk
+	MENU INDENT 2
+	LOCALBOOT 0
+
+MENU END

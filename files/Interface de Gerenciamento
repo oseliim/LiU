@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Name=Meu Documento de Texto Personalizado
+Comment=Abre meu arquivo de texto especial
+Type=Application
+Categories=Utility;
+
+path=`find / -type d -name "Interfaces_LIU" | head -n 1`
+
+# Caminho para o programa que abre o arquivo, seguido do caminho para o SEU arquivo
+Exec=bash $path/files/open_gerencia.sh
+
+# Caminho completo para o seu ícone personalizado (.png ou .svg funcionam bem)
+Icon=$path/files/LIFTO_LOGO_NEW.png
