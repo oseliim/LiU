@@ -93,7 +93,7 @@ apt upgrade -y
 apt-get install -y epoptes-client policykit-1 network-manager dbus \
   software-properties-common systemd-sysv ethtool wakeonlan
 
-apt-get install --install-recommends -y ltsp ubuntu-desktop gdm3 nano gedit vim
+apt-get install --install-recommends -y ltsp ubuntu-desktop gdm3 nano gedit vim curl
 
 echo '[6.1] Instalação do kernel e initramfs...'
 apt-get install --reinstall -y linux-generic initramfs-tools
