@@ -1,0 +1,11 @@
+❯ Starting Windows for Docker v4.35...
+❯ For support visit https://github.com/dockur/windows
+❯ CPU: Intel Core i5 3330 | RAM: 9/16 GB | DISK: 740 GB (ext4) | KERNEL: 5.15.0-151...
+
+[1;34m❯ [1;36mResizing disk from 70 GB to 150 GB...[0m
+[1;34m❯ [1;36mBooting Windows using QEMU v10.0.0...[0m
+BdsDxe: loading Boot0004 "Windows Boot Manager" from HD(1,GPT,4ED0903C-0ADB-406F-B2DB-26D3CCBBF77D,0x800,0x40000)/\EFI\Microsoft\Boot\bootmgfw.efi
+BdsDxe: starting Boot0004 "Windows Boot Manager" from HD(1,GPT,4ED0903C-0ADB-406F-B2DB-26D3CCBBF77D,0x800,0x40000)/\EFI\Microsoft\Boot\bootmgfw.efi
+[1;34m❯ [1;36mWindows started succesfully, visit http://127.0.0.1:8006/ to view the screen...[0m
+BdsDxe: loading Boot0004 "Windows Boot Manager" from HD(1,GPT,4ED0903C-0ADB-406F-B2DB-26D3CCBBF77D,0x800,0x40000)/\EFI\Microsoft\Boot\bootmgfw.efi
+BdsDxe: starting Boot0004 "Windows Boot Manager" from HD(1,GPT,4ED0903C-0ADB-406F-B2DB-26D3CCBBF77D,0x800,0x40000)/\EFI\Microsoft\Boot\bootmgfw.efi

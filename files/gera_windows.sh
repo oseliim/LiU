@@ -38,8 +38,11 @@ cp LIFTO_ICON.svg "$CHROOT_DIR/usr/share/icons/Yaru/scalable/actions/view-app-gr
 cp apps_pre_install.sh "$CHROOT_DIR/"
 chmod +x "$CHROOT_DIR/apps_pre_install.sh"
 cp tmp/additional_packages.txt "$CHROOT_DIR/"
-
+#Instalar requisitos para windows docker
 cp chroot_scripts/apps_windows.sh "$CHROOT_DIR/"
+#Aplicativo inicializador do windows
+cp -r chroot_scripts/init_windows "$CHROOT_DIR/usr/loca/bin/"
+chmod -R 777 "$CHROOT_DIR/usr/loca/bin/init_windows"
 
 # --- Montagem de FS críticos ---
 echo "[4] Montando fs críticos no chroot..."
@@ -158,6 +161,15 @@ systemctl set-default graphical.target
 echo '[6.9] Pacotes para Windows'
 chmod +x apps_windows.sh
 ./apps_windows.sh
+
+echo '[6.10] Configurando inicializacao do app windows'
+cat > /etc/xdg/autostart/win10.desktop <<EOF
+[Desktop Entry]
+Type=Application
+Name=Win10 Autorun
+Exec=/usr/local/bin/init_windows/autorun.sh
+X-GNOME-Autostart-enabled=true
+EOF 
 
 update-rc.d ltsp-ssh-init defaults
 
