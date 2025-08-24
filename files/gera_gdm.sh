@@ -120,7 +120,6 @@ echo '[6.5] Configurando epoptes...'
 epoptes-client -c
 
 echo '[6.6] Definindo configurações DConf...'
-echo '[6.6] Configurando papel de parede e restrições GNOME via DConf...'
 
 # Criar diretórios necessários
 mkdir -p /etc/dconf/db/local.d/
