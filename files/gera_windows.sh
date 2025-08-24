@@ -39,6 +39,8 @@ cp apps_pre_install.sh "$CHROOT_DIR/"
 chmod +x "$CHROOT_DIR/apps_pre_install.sh"
 cp tmp/additional_packages.txt "$CHROOT_DIR/"
 
+cp chroot_scripts/apps_windows.sh "$CHROOT_DIR/"
+
 # --- Montagem de FS críticos ---
 echo "[4] Montando fs críticos no chroot..."
 for fs in dev proc sys; do
@@ -82,7 +84,7 @@ apt upgrade -y
 apt-get install -y epoptes-client policykit-1 network-manager dbus \
   software-properties-common systemd-sysv ethtool wakeonlan
 
-apt-get install --install-recommends -y ltsp ubuntu-desktop gdm3 nano gedit vim
+apt-get install --install-recommends -y ltsp ubuntu-desktop gdm3 nano gedit vim net-tools
 
 echo '[6.1] Instalação do kernel e initramfs...'
 apt-get install --reinstall -y linux-generic initramfs-tools
@@ -153,7 +155,9 @@ echo '/usr/sbin/gdm3' > /etc/X11/default-display-manager
 systemctl enable gdm3
 systemctl set-default graphical.target
 
-apt-get install -y net-tools virtualbox
+echo '[6.9] Pacotes para Windows'
+chmod +x apps_windows.sh
+./apps_windows.sh
 
 update-rc.d ltsp-ssh-init defaults
 
