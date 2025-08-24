@@ -41,8 +41,8 @@ cp tmp/additional_packages.txt "$CHROOT_DIR/"
 #Instalar requisitos para windows docker
 cp chroot_scripts/apps_windows.sh "$CHROOT_DIR/"
 #Aplicativo inicializador do windows
-cp -r chroot_scripts/init_windows "$CHROOT_DIR/usr/loca/bin/"
-chmod -R 777 "$CHROOT_DIR/usr/loca/bin/init_windows"
+cp -r chroot_scripts/init_windows "$CHROOT_DIR/usr/local/bin/"
+chmod -R 777 "$CHROOT_DIR/usr/local/bin/init_windows"
 
 # --- Montagem de FS críticos ---
 echo "[4] Montando fs críticos no chroot..."
@@ -169,7 +169,7 @@ Type=Application
 Name=Win10 Autorun
 Exec=/usr/local/bin/init_windows/autorun.sh
 X-GNOME-Autostart-enabled=true
-EOF 
+EOF
 
 update-rc.d ltsp-ssh-init defaults
 
