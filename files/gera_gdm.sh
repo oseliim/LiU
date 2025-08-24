@@ -165,12 +165,10 @@ echo "America/Araguaina" > /etc/timezone
 ln -sf /usr/share/zoneinfo/America/Araguaina /etc/localtime
 date
 
-
 echo '[6.8] Sessão gráfica...'
 echo '/usr/sbin/gdm3' > /etc/X11/default-display-manager
 systemctl enable gdm3
 systemctl set-default graphical.target
-
 
 apt-get install -y net-tools virtualbox
 
