@@ -44,6 +44,7 @@ mkdir -p "$CHROOT_DIR/usr/share/icons/Yaru/scalable/actions"
 cp LIFTO_ICON.svg "$CHROOT_DIR/usr/share/icons/Yaru/scalable/actions/view-app-grid-symbolic.svg"
 
 # --- Copia de arquivos do host ---
+#Caso tenha os arquivos
 #cp apps/VMware-*.bundle "$CHROOT_DIR/"
 cp apps_pre_install.sh "$CHROOT_DIR/"
 chmod +x "$CHROOT_DIR/apps_pre_install.sh"
