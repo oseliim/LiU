@@ -20,19 +20,20 @@ case "$1" in
     log "Reiniciando o serviço SSH..."
     systemctl restart ssh || service ssh restart
 
-    #if command -v vmware-modconfig &>/dev/null; then
-     # log "Recompilando kernel modules do VMware..."
-     # vmware-modconfig --console --install-all || log "Falha ao recompilar módulos VMware (ignorado)"
-    #else
-     # log "VMware não instalado, ignorando recompilação de módulos."
-    #fi
+    if command -v vmware-modconfig &>/dev/null; then
+      log "Recompilando kernel modules do VMware..."
+      vmware-modconfig --console --install-all || log "Falha ao recompilar módulos VMware (ignorado)"
+    else
+      log "VMware não instalado, ignorando recompilação de módulos."
+    fi
 
-   # if [ -x /bin/desmonta_home.sh ]; then
-    #  log "Desmontando home local com desmonta_home.sh..."
+    if [ -x /bin/desmonta_home.sh ]; then
+      log "Desmontando home local com desmonta_home.sh..."
+      sleep 10
       /bin/desmonta_home.sh
-    #else
-     # log "Script /bin/desmonta_home.sh não encontrado ou não executável."
-    #fi
+    else
+      log "Script /bin/desmonta_home.sh não encontrado ou não executável."
+    fi
 
     /bin/executa.sh
     ;;
