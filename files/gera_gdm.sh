@@ -90,7 +90,7 @@ apt-get update -y
 apt upgrade -y
 
 apt-get install -y epoptes-client policykit-1 network-manager dbus \
-  software-properties-common systemd-sysv
+  software-properties-common systemd-sysv ethtool wakeonlan
 
 apt-get install --install-recommends -y ltsp ubuntu-desktop gdm3 nano gedit vim
 
@@ -103,7 +103,6 @@ apt-get install -y language-pack-pt language-pack-pt-base
 locale-gen pt_BR.UTF-8
 update-locale LANG=pt_BR.UTF-8 LANGUAGE=pt_BR:pt LC_ALL=pt_BR.UTF-8
 sed -i 's/^XKBLAYOUT=.*/XKBLAYOUT=\"br\"/' /etc/default/keyboard
-timedatectl set-timezone America/Sao_Paulo
 
 echo '[6.3] Instalando Google Chrome...'
 apt-get install -y curl
@@ -120,18 +119,26 @@ systemctl enable ssh
 echo '[6.5] Configurando epoptes...'
 epoptes-client -c
 
-echo '[6.6] Definindo papel de parede via DConf...'
+echo '[6.6] Definindo configurações DConf...'
+echo '[6.6] Configurando papel de parede e restrições GNOME via DConf...'
 
+# Criar diretórios necessários
 mkdir -p /etc/dconf/db/local.d/
+mkdir -p /etc/dconf/db/local.d/locks
 
+# Configuração do papel de parede
 cat > /etc/dconf/db/local.d/00-wallpaper <<EOF
 [org/gnome/desktop/background]
 picture-uri='file:///usr/share/backgrounds/ltsp_wallpaper.jpg'
+picture-uri-dark='file:///usr/share/backgrounds/ltsp_wallpaper.jpg'
 picture-options='zoom'
 EOF
 
-dconf update
+# Bloquear alterações do usuário
+echo "/org/gnome/desktop/background/picture-uri" >> /etc/dconf/db/local.d/locks/00-wallpaper
+echo "/org/gnome/desktop/background/picture-uri-dark" >> /etc/dconf/db/local.d/locks/00-wallpaper
 
+# Restrições de logout, switch e lock
 cat > /etc/dconf/db/local.d/01-lockdown <<EOF
 [org/gnome/desktop/lockdown]
 disable-log-out=true
@@ -141,20 +148,26 @@ EOF
 
 dconf update
 
-mkdir -p /etc/polkit-1/localauthority/50-local.d/
+# Perfil dconf
+echo "user-db:user" > /etc/dconf/profile/user
+echo "system-db:local" >> /etc/dconf/profile/user
 
-touch /etc/polkit-1/localauthority/50-local.d/
-cat > <<EOF
+# Polkit - bloqueando desligar/reiniciar
+mkdir -p /etc/polkit-1/localauthority/50-local.d/
+cat > /etc/polkit-1/localauthority/50-local.d/disable-shutdown.pkla <<EOF
 [Disable shutdown, reboot and suspend]
 Identity=unix-user:*
 Action=org.freedesktop.login1.reboot;org.freedesktop.login1.power-off;org.freedesktop.login1.suspend;org.freedesktop.login1.hibernate
 ResultActive=no
 EOF
 
-echo "user-db:user" > /etc/dconf/profile/user
-echo "system-db:local" >> /etc/dconf/profile/user
+echo '[6.7] Setando fuso horário'
+echo "America/Araguaina" > /etc/timezone
+ln -sf /usr/share/zoneinfo/America/Araguaina /etc/localtime
+date
 
-echo '[6.7] Sessão gráfica...'
+
+echo '[6.8] Sessão gráfica...'
 echo '/usr/sbin/gdm3' > /etc/X11/default-display-manager
 systemctl enable gdm3
 systemctl set-default graphical.target

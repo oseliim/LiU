@@ -5,7 +5,7 @@
 # Required-Stop:
 # Default-Start:     2 3 4 5
 # Default-Stop:
-# Short-Description: Inicializa SSH e serviços VMware em cliente LTSP
+# Short-Description: Gera chaves SSH e reinicia o serviço
 ### END INIT INFO
 
 log() {
@@ -17,36 +17,24 @@ case "$1" in
     log "Gerando chaves SSH (se necessário)..."
     ssh-keygen -A
 
-    log "Reiniciando serviço SSH..."
-    systemctl restart ssh 2>/dev/null || service ssh restart
+    log "Reiniciando o serviço SSH..."
+    systemctl restart ssh || service ssh restart
 
-    log "Recompilando módulos VMware (se necessário)..."
-    vmware-modconfig --console --install-all || log "Falha ao compilar VMware (ignorado)"
+    #if command -v vmware-modconfig &>/dev/null; then
+     # log "Recompilando kernel modules do VMware..."
+     # vmware-modconfig --console --install-all || log "Falha ao recompilar módulos VMware (ignorado)"
+    #else
+     # log "VMware não instalado, ignorando recompilação de módulos."
+    #fi
 
-    log "Reiniciando serviços VMware..."
-    if [ -x /etc/init.d/vmware-USBArbitrator ]; then
-      /etc/init.d/vmware-USBArbitrator restart
-    else
-      log "vmware-USBArbitrator não encontrado"
-    fi
-
-    if [ -x /etc/init.d/vmware ]; then
-      /etc/init.d/vmware restart
-    else
-      log "vmware não encontrado"
-    fi
-
-    if [ -x /bin/desmonta_home.sh ]; then
-      log "Executando desmonta_home.sh..."
+   # if [ -x /bin/desmonta_home.sh ]; then
+    #  log "Desmontando home local com desmonta_home.sh..."
       /bin/desmonta_home.sh
-    else
-      log "Script desmonta_home.sh não encontrado ou sem permissão."
-    fi
+    #else
+     # log "Script /bin/desmonta_home.sh não encontrado ou não executável."
+    #fi
 
-    if [ -x /bin/executa.sh ]; then
-      log "Executando script final..."
-      /bin/executa.sh
-    fi
+    /bin/executa.sh
     ;;
   *)
     echo "Uso: /etc/init.d/ltsp-ssh-init start"
