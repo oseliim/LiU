@@ -43,26 +43,11 @@ cp LIFTO_WALLPAPER_LI_BLACK.jpg "$CHROOT_DIR/usr/share/backgrounds/ltsp_wallpape
 mkdir -p "$CHROOT_DIR/usr/share/icons/Yaru/scalable/actions"
 cp LIFTO_ICON.svg "$CHROOT_DIR/usr/share/icons/Yaru/scalable/actions/view-app-grid-symbolic.svg"
 
-cat > "$CHROOT_DIR/etc/profile.d/set-wallpaper.sh" <<'EOF'
-#!/bin/bash
-
-# Aguarda a sessão estar pronta e aplica o wallpaper via gsettings
-(
-  sleep 5
-  export DISPLAY=:0
-  export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
-  gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/ltsp_wallpaper.jpg'
-  gsettings set org.gnome.desktop.background picture-options 'zoom'
-) &
-EOF
-
-chmod +x "$CHROOT_DIR/etc/profile.d/set-wallpaper.sh"
-
 # --- Copia de arquivos do host ---
-cp apps/VMware-*.bundle "$CHROOT_DIR/"
+#cp apps/VMware-*.bundle "$CHROOT_DIR/"
 cp apps_pre_install.sh "$CHROOT_DIR/"
 chmod +x "$CHROOT_DIR/apps_pre_install.sh"
-cp -r tmp "$CHROOT_DIR/"
+cp tmp/additional_packages.txt "$CHROOT_DIR/"
 
 # --- Montagem de FS críticos ---
 #echo "[4] Montando fs críticos no chroot..."
@@ -81,16 +66,16 @@ deb $MIRROR $UBUNTU_VERSION-security main universe multiverse restricted
 EOF
 
 # --- Scripts auxiliares ---
+#init.d para execução dos scripts de boot personalizados
 cp chroot_scripts/init_file "$CHROOT_DIR/etc/init.d/ltsp-ssh-init"
 chmod 777 "$CHROOT_DIR/etc/init.d/ltsp-ssh-init"  
-#cp chroot_scripts/desmonta_home.sh "$CHROOT_DIR/bin/"
-#chmod 755 "$CHROOT_DIR/bin/desmonta_home.sh"
-cp chroot_scripts/desmonta-actual.sh "$CHROOT_DIR/bin/desmonta_home.sh"
-chmod 777 "$CHROOT_DIR/bin/desmonta_home.sh"
-
+# desmontagem de disco remoto e montagem local
+cp chroot_scripts/desmonta_home.sh "$CHROOT_DIR/bin/"
+chmod 755 "$CHROOT_DIR/bin/desmonta_home.sh"
+# d é o desliga para permitir wakeonlan
 cp chroot_scripts/d $CHROOT_DIR/usr/bin/
 chmod 777 $CHROOT_DIR/usr/bin/
-
+# abri uma porta para execução de comandos
 cp chroot_scripts/executa.sh $CHROOT_DIR/usr/bin/
 chmod 777 $CHROOT_DIR/usr/bin/executa.sh
 
@@ -104,7 +89,7 @@ add-apt-repository -y universe
 apt-get update -y
 apt upgrade -y
 
-apt-get install -y firefox epoptes-client policykit-1 network-manager dbus \
+apt-get install -y epoptes-client policykit-1 network-manager dbus \
   software-properties-common systemd-sysv
 
 apt-get install --install-recommends -y ltsp ubuntu-desktop gdm3 nano gedit vim
@@ -136,7 +121,9 @@ echo '[6.5] Configurando epoptes...'
 epoptes-client -c
 
 echo '[6.6] Definindo papel de parede via DConf...'
+
 mkdir -p /etc/dconf/db/local.d/
+
 cat > /etc/dconf/db/local.d/00-wallpaper <<EOF
 [org/gnome/desktop/background]
 picture-uri='file:///usr/share/backgrounds/ltsp_wallpaper.jpg'
@@ -144,6 +131,28 @@ picture-options='zoom'
 EOF
 
 dconf update
+
+cat > /etc/dconf/db/local.d/01-lockdown <<EOF
+[org/gnome/desktop/lockdown]
+disable-log-out=true
+disable-user-switching=true
+disable-lock-screen=true
+EOF
+
+dconf update
+
+mkdir -p /etc/polkit-1/localauthority/50-local.d/
+
+touch /etc/polkit-1/localauthority/50-local.d/
+cat > <<EOF
+[Disable shutdown, reboot and suspend]
+Identity=unix-user:*
+Action=org.freedesktop.login1.reboot;org.freedesktop.login1.power-off;org.freedesktop.login1.suspend;org.freedesktop.login1.hibernate
+ResultActive=no
+EOF
+
+echo "user-db:user" > /etc/dconf/profile/user
+echo "system-db:local" >> /etc/dconf/profile/user
 
 echo '[6.7] Sessão gráfica...'
 echo '/usr/sbin/gdm3' > /etc/X11/default-display-manager
@@ -164,29 +173,6 @@ echo 'pref.vmplayer.fullscreen.nobar = \"TRUE\"' >> /etc/vmware/config
 update-initramfs -u
 "
 
-# --- Pós-chroot: configurações VMware ---
-CONFIG_FILE="$CHROOT_DIR/etc/vmware/config"
-mkdir -p "$(dirname "$CONFIG_FILE")"
-touch "$CONFIG_FILE"
-
-declare -A CONFIGS=(
-  ["installerDefaults.autoSoftwareUpdateEnabled"]="yes"
-  ["installerDefaults.dataCollectionEnabled"]="yes"
-  ["installerDefaults.dataCollectionEnabled.initialized"]="yes"
-  ["installerDefaults.componentDownloadEnabled"]="yes"
-  ["acceptOVFEULA"]="yes"
-  ["acceptEULA"]="yes"
-)
-
-for key in "${!CONFIGS[@]}"; do
-  value="${CONFIGS[$key]}"
-  if grep -qE "^$key *= *\".*\"" "$CONFIG_FILE"; then
-    sed -i -E "s|^$key *= *\".*\"|$key = \"$value\"|" "$CONFIG_FILE"
-  else
-    echo "$key = \"$value\"" >> "$CONFIG_FILE"
-  fi
-done
-
 # --- Desmontagem de bind mounts ---
 #echo "[7] Desmontando sistemas montados..."
 for fs in dev proc sys; do
@@ -204,4 +190,4 @@ echo "[9] Reiniciando serviços..."
 bash reinicia.sh
 
 echo "[10] Gerando menu iPXE..."
-bash ipxe_menu.sh "$NAME"
+bash ipxe_menu.sh
