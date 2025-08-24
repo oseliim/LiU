@@ -1,8 +1,6 @@
 #!/bin/bash
 # Root-only tasks for Ubuntu 22.04 - Instalação de pacotes e serviços
 
-set -e
-
 require_root() {
     if [ "$(id -u)" -ne 0 ]; then
         echo "⛔ Este script deve ser executado como root (use sudo)."
@@ -26,17 +24,26 @@ install_gtk4_deps() {
 install_docker_stack() {
     echo "🔧 Verificando/instalando Docker e complementos..."
 
-    if ! command -v docker >/dev/null; then
-        echo "🐳 Docker não encontrado. Instalando pelo script oficial..."
-        curl -fsSL https://get.docker.com | sh
-    fi
+echo "🔧 Instalando Docker via repositório (mais rápido)..."
+    
+    # Adicionar repositório oficial do Docker
+    apt-get update
+    apt-get install -y ca-certificates curl
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    chmod a+r /etc/apt/keyrings/docker.asc
 
-    # Docker Compose plugin
-    if ! docker compose version >/dev/null 2>&1; then
-        echo "➕ Instalando docker-compose-plugin..."
-        apt-get update
-        apt-get install -y docker-compose-plugin
-    fi
+    # Adicionar repositório
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+      tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    # Instalar Docker
+    apt-get update
+    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+    echo "✅ Docker instalado via repositório"
 
     # xfreerdp
     if ! command -v xfreerdp >/dev/null 2>&1; then
