@@ -75,8 +75,9 @@ echo "    • DHCP Range: $RANGE_INICIO - $RANGE_FIM"
 echo "    • Gateway: ${DEFAULT_GATEWAY:-Usando padrão do LTSP}"
 echo "    • DNS Server: $IP_DNS"
 
-# Atualiza o range DHCP
-sed -i "s|^dhcp-range=.*|dhcp-range=${RANGE_INICIO},${RANGE_FIM},12h|" "$DNSMASQ_LTSP_CONF"
+# Remove linhas antigas e insere a correta para o range DHCP
+sed -i '/^dhcp-range=.*/d' "$DNSMASQ_LTSP_CONF"
+echo "dhcp-range=${RANGE_INICIO},${RANGE_FIM},12h" >> "$DNSMASQ_LTSP_CONF"
 
 # Atualiza o DNS server
 if grep -q "^dhcp-option=6," "$DNSMASQ_LTSP_CONF"; then
