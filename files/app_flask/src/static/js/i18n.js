@@ -1,6 +1,6 @@
 const translations = {
     "en": {
-        "title": "Laboratórios Inteligentes do IFTO",
+        "title": "Laboratórios Inteligentes Unificados",
         "subtitle": "Installation and Configuration Wizard",
         "step1_label": "Installation",
         "step2_label": "Network",
@@ -56,7 +56,7 @@ const translations = {
         "no": "No"
     },
     "pt-BR": {
-        "title": "Laboratórios Inteligentes do IFTO",
+        "title": "Laboratórios Inteligentes Unificados",
         "subtitle": "Assistente de Instalação e Configuração",
         "step1_label": "Instalação",
         "step2_label": "Rede",
