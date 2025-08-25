@@ -18,7 +18,6 @@ class UsersModule {
             generateUsersBtn: document.getElementById('generate-users-btn'),
             userPrefix: document.getElementById('user-prefix'),
             defaultPassword: document.getElementById('default-password'),
-            autologinCheck: document.getElementById('autologin-check')
         };
         
         console.log('UsersModule: Elementos encontrados:', {
@@ -28,7 +27,6 @@ class UsersModule {
             generateUsersBtn: !!this.elements.generateUsersBtn,
             userPrefix: !!this.elements.userPrefix,
             defaultPassword: !!this.elements.defaultPassword,
-            autologinCheck: !!this.elements.autologinCheck
         });
         
         this.bindEvents();
@@ -120,18 +118,10 @@ class UsersModule {
             }
         }
         
-        // Atualizar o formData
-        const isValid = this.validateUserFields();
-        console.log('Usuários gerados, validação:', isValid);
-        
-        // Habilitar o botão "Próximo" após gerar usuários
-        if (isValid) {
-            this.enableStep35NextBtn();
-            console.log('Botão próximo habilitado');
-        } else {
-            this.disableStep35NextBtn();
-            console.log('Botão próximo desabilitado - validação falhou');
-        }
+        // Atualizar o formData e validar já com eventos dos campos vinculados
+        setTimeout(() => {
+            this.validateAndUpdateButton();
+        }, 0);
     }
 
     /**
@@ -334,7 +324,6 @@ class UsersModule {
                     users.push({
                         username: usernameInput.value,
                         password: passwordInput.value,
-                        autologin: i === 0 && this.elements.autologinCheck.checked
                     });
                     wizardManager.updateFormData('users', users);
                     hasValidUsers = true;

@@ -3,3 +3,5 @@ maquina02:maquina02
 aluno03:aluno
 aluno01:aluno
 aluno02:aluno
+aluno1:aluno
+aluno2:aluno
