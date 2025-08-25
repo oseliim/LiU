@@ -92,6 +92,7 @@ create_default_source() {
     if [ ! -f "$SOURCE_FILE" ]; then
         echo "📝 Creating default GTK4 application..."
         cat > "$SOURCE_FILE" << 'EOM'
+
 EOM
     fi
 }
