@@ -1,5 +1,5 @@
 maquina01:maquina01
 maquina02:maquina02
+aluno03:aluno
 aluno01:aluno
 aluno02:aluno
-aluno03:aluno

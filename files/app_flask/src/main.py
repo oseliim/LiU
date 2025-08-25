@@ -274,8 +274,11 @@ def run_all_configurations():
         additional_packages_file = None
 
     # Determinar qual script de imagem usar
-    is_windows = 'windows' in image_config.get('version', '').lower()
-    image_script_path = GERA_GDM_SCRIPT if desktop_env == 'gdm' else GERA_XFCE_SCRIPT
+    windows_selected = 'windows' in image_config.get('version', '').lower()
+    if windows_selected:
+        image_script_path = os.path.join(BASE_PROJECT_DIR, "gera_windows.sh")
+    else:
+        image_script_path = GERA_GDM_SCRIPT if desktop_env == 'gdm' else GERA_XFCE_SCRIPT
     
     # Preparar comandos
     dnsmasq_command = ["sudo", "bash", DNSMASQ_CONF_SCRIPT]
@@ -287,14 +290,9 @@ def run_all_configurations():
     if network_config.get('dnsServer'):
         dnsmasq_command.append(network_config.get('dnsServer'))
     
-    image_command = None
-    if not is_windows:
-        image_command = ["sudo", "bash", image_script_path, ubuntu_version]
+    image_command = ["sudo", "bash", image_script_path, ubuntu_version]
 
-    # Comandos para Windows
-    windows_dir = os.path.join(BASE_PROJECT_DIR, "windows")
-    importa_windows_script = os.path.join(windows_dir, "importa_windows.sh")
-    gera_windows_script = os.path.join(windows_dir, "gera_windows.sh")
+    # Comandos para Linux
 
     # Este gerador irá produzir o output de todos os scripts em sequência
     def combined_stream():
@@ -344,45 +342,16 @@ def run_all_configurations():
                 yield f"<p style='color:red;'>Falha ao executar montar_conf.sh. Código: {process_montar.returncode}</p>"
         
         # --- 3. IMAGE GENERATION ---
-        if is_windows:
-            yield "<p><strong>--- Iniciando importação do Windows ---</strong></p>"
-            if not os.path.isfile(importa_windows_script):
-                yield f"<p style='color:red;'>Script de importação do Windows não encontrado: {importa_windows_script}</p>"
-            else:
-                app.logger.info(f"Executando importa_windows.sh em {windows_dir}")
-                proc_import = subprocess.Popen(["sudo", "bash", importa_windows_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1, universal_newlines=True, cwd=windows_dir)
-                for line in proc_import.stdout: yield f"<p>[importa_windows] {line.strip()}</p>"
-                for line in proc_import.stderr: yield f"<p style='color:red;'>[importa_windows] {line.strip()}</p>"
-                proc_import.wait()
-                if proc_import.returncode != 0:
-                    yield f"<p style='color:red;'>Falha na importação do Windows. Código: {proc_import.returncode}</p>"
-                    return
-                yield "<p style='color:green;'>Importação do Windows concluída.</p>"
-
-            yield "<p><strong>--- Iniciando geração da imagem do Windows ---</strong></p>"
-            if not os.path.isfile(gera_windows_script):
-                yield f"<p style='color:red;'>Script de geração do Windows não encontrado: {gera_windows_script}</p>"
-            else:
-                app.logger.info(f"Executando gera_windows.sh em {windows_dir}")
-                proc_gera = subprocess.Popen(["sudo", "bash", gera_windows_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1, universal_newlines=True, cwd=windows_dir)
-                for line in proc_gera.stdout: yield f"<p>[gera_windows] {line.strip()}</p>"
-                for line in proc_gera.stderr: yield f"<p style='color:red;'>[gera_windows] {line.strip()}</p>"
-                proc_gera.wait()
-                if proc_gera.returncode != 0:
-                    yield f"<p style='color:red;'>Falha na geração da imagem do Windows. Código: {proc_gera.returncode}</p>"
-                else:
-                    yield "<p style='color:green;'>Geração da imagem do Windows concluída.</p>"
+        yield "<p><strong>--- Iniciando geração da imagem ---</strong></p>"
+        app.logger.info(f"Executing image generation: {' '.join(image_command)}")
+        process_image = subprocess.Popen(image_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1, universal_newlines=True, cwd=BASE_PROJECT_DIR)
+        for line in process_image.stdout: yield f"<p>{line.strip()}</p>"
+        for line in process_image.stderr: yield f"<p style='color:red;'>{line.strip()}</p>"
+        process_image.wait()
+        if process_image.returncode != 0:
+            yield f"<p style='color:red;'>Falha na geração da imagem. Código: {process_image.returncode}</p>"
         else:
-            yield "<p><strong>--- Iniciando geração da imagem ---</strong></p>"
-            app.logger.info(f"Executing image generation: {' '.join(image_command)}")
-            process_image = subprocess.Popen(image_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1, universal_newlines=True, cwd=BASE_PROJECT_DIR)
-            for line in process_image.stdout: yield f"<p>{line.strip()}</p>"
-            for line in process_image.stderr: yield f"<p style='color:red;'>{line.strip()}</p>"
-            process_image.wait()
-            if process_image.returncode != 0:
-                yield f"<p style='color:red;'>Falha na geração da imagem. Código: {process_image.returncode}</p>"
-            else:
-                yield "<p style='color:green;'>Geração da imagem concluída.</p>"
+            yield "<p style='color:green;'>Geração da imagem concluída.</p>"
 
         # --- 4. iPXE MENU EXECUÇÃO ---
         yield "<p><strong>--- Executando menu iPXE ---</strong></p>"
