@@ -105,8 +105,10 @@ class WizardManager {
      * Carrega informações de rede para o step 2
      */
     async loadNetworkInfo() {
-        const networkModule = new NetworkModule();
-        await networkModule.loadAndDisplayNetworkInfo();
+        if (window.networkModule) {
+            await window.networkModule.loadAndDisplayNetworkInfo();
+            window.networkModule.bindEvents(); // Garante eventos após render DOM
+        }
     }
 
     /**
@@ -159,8 +161,10 @@ class WizardManager {
      */
     validateCurrentStep() {
         if (this.currentStep === 2) {
-            const networkModule = new NetworkModule();
-            return networkModule.validateCurrentState();
+            if (window.networkModule) {
+                return window.networkModule.validateCurrentState();
+            }
+            return true;
         } else if (this.currentStep === 3) {
             return this.validateImageStep();
         }

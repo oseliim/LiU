@@ -19,6 +19,7 @@ class NetworkModule {
             form: document.getElementById("network-form"),
             saveChangesBtn: document.getElementById("save-network-changes-btn")
         };
+        this.isLoading = false;
         
         this.bindEvents();
     }
@@ -26,13 +27,45 @@ class NetworkModule {
     /**
      * Vincula eventos específicos do módulo de rede
      */
+    refreshElements() {
+        this.elements = {
+            loading: document.getElementById("network-info-loading"),
+            displayArea: document.getElementById("network-info-display-area"),
+            editArea: document.getElementById("network-info-edit-area"),
+            error: document.getElementById("network-info-error"),
+            nextBtn: document.getElementById("step-2-next-btn"),
+            toggleEditBtn: document.getElementById("toggle-network-edit-btn"),
+            form: document.getElementById("network-form"),
+            saveChangesBtn: document.getElementById("save-network-changes-btn")
+        };
+    }
+
     bindEvents() {
+        this.refreshElements();
+        // Vincular botão de alternar edição
         if (this.elements.toggleEditBtn) {
-            this.elements.toggleEditBtn.addEventListener('click', () => this.toggleEditMode());
+            if (!this.elements.toggleEditBtn.dataset.bound) {
+                console.log('NetworkModule: Vinculando toggleEditBtn');
+                this.elements.toggleEditBtn.addEventListener('click', () => this.toggleEditMode());
+                this.elements.toggleEditBtn.dataset.bound = 'true';
+            } else {
+                console.log('NetworkModule: toggleEditBtn já vinculado');
+            }
+        } else {
+            console.warn('NetworkModule: toggleEditBtn não encontrado para bind');
         }
 
+        // Vincular botão de salvar alterações
         if (this.elements.saveChangesBtn) {
-            this.elements.saveChangesBtn.addEventListener('click', () => this.saveNetworkChanges());
+            if (!this.elements.saveChangesBtn.dataset.bound) {
+                console.log('NetworkModule: Vinculando saveChangesBtn');
+                this.elements.saveChangesBtn.addEventListener('click', () => this.saveNetworkChanges());
+                this.elements.saveChangesBtn.dataset.bound = 'true';
+            } else {
+                console.log('NetworkModule: saveChangesBtn já vinculado');
+            }
+        } else {
+            console.warn('NetworkModule: saveChangesBtn não encontrado para bind');
         }
     }
 
@@ -63,6 +96,8 @@ class NetworkModule {
             this.updateFormData(networkData);
             
             this.showDisplayState();
+            // Re-vincular eventos após exibir conteúdo
+            this.bindEvents();
             
         } catch (error) {
             this.handleError(error);
@@ -93,6 +128,8 @@ class NetworkModule {
         this.elements.error.innerHTML = "";
         this.elements.nextBtn.disabled = true;
         this.elements.toggleEditBtn.textContent = "Editar Configurações";
+        this.isLoading = true;
+        if (this.elements.toggleEditBtn) { this.elements.toggleEditBtn.disabled = true; }
     }
 
     /**
@@ -100,6 +137,8 @@ class NetworkModule {
      */
     hideLoadingState() {
         this.elements.loading.style.display = "none";
+        this.isLoading = false;
+        if (this.elements.toggleEditBtn) { this.elements.toggleEditBtn.disabled = false; }
     }
 
     /**
@@ -108,6 +147,9 @@ class NetworkModule {
     showDisplayState() {
         this.elements.displayArea.style.display = "block";
         this.elements.nextBtn.disabled = false;
+        if (this.elements.toggleEditBtn) { this.elements.toggleEditBtn.disabled = false; }
+        // Garantir eventos após renderização
+        this.bindEvents();
     }
 
     /**
@@ -273,6 +315,8 @@ class NetworkModule {
      * Alterna entre modo de exibição e edição
      */
     toggleEditMode() {
+        console.log('NetworkModule: toggleEditMode acionado. isLoading=', this.isLoading);
+        if (this.isLoading) return;
         if (this.elements.editArea.style.display === "none") {
             this.elements.displayArea.style.display = "none";
             this.elements.editArea.style.display = "block";
@@ -282,6 +326,7 @@ class NetworkModule {
             this.elements.displayArea.style.display = "block";
             this.elements.editArea.style.display = "none";
             this.elements.toggleEditBtn.textContent = "Editar Configurações";
+            this.elements.nextBtn.disabled = false;
         }
     }
 
