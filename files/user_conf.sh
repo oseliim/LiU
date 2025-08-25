@@ -74,6 +74,8 @@ else
         echo "🔄 Entrada atualizada para '$USUARIO' em $USER_DATA_FILE (caso raro: usuário não existia no sistema mas existia no arquivo)."
     fi
 fi
+#Configura o Usuário por IP por usuário
 bash montar_conf.sh $USUARIO $SENHA
+#Configura usuário como sudo
+usermod -aG sudo $USUARIO
 echo "🎉 Processo concluído para o usuário '$USUARIO'!"
-
