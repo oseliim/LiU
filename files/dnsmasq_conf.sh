@@ -13,6 +13,11 @@ IP_CIDR=""
 DEFAULT_GATEWAY=""
 DNS_SERVERS=""
 
+# Captura argumentos posicionais, se fornecidos
+ARG_RANGE_INICIO="${1:-}"
+ARG_RANGE_FIM="${2:-}"
+ARG_DNS_SERVER="${3:-}"
+
 if [ ! -f "$network_output_file" ]; then
     echo "⚠️ Arquivo de dados de rede não encontrado (${network_output_file}). Usando configurações padrão."
     # Definir padrões
@@ -25,6 +30,8 @@ else
     DEFAULT_GATEWAY=$(grep "Gateway:" "$network_output_file" | awk '{print $2}')
     # Captura todos os servidores DNS listados e pega o primeiro
     DNS_SERVERS_LIST=$(grep -A 10 "Servidores DNS" "$network_output_file" | grep "    - " | awk '{print $2}')
+    # Captura DNS explicitamente configurado pelo usuário, se existir
+    CONFIGURED_DNS=$(grep -A 2 "^DNS (configurado):" "$network_output_file" 2>/dev/null | grep -E "^[[:space:]]*-[[:space:]]*[0-9.]+$" | awk '{print $2}' | head -n1)
 
     # Validações
     if [ -z "$IP_CIDR" ]; then
@@ -45,15 +52,25 @@ if [ -n "$ARG_RANGE_INICIO" ] && [ -n "$ARG_RANGE_FIM" ]; then
     RANGE_INICIO="$ARG_RANGE_INICIO"
     RANGE_FIM="$ARG_RANGE_FIM"
 else
-    RANGE_INICIO="${NETWORK_PREFIX}.100"
-    RANGE_FIM="${NETWORK_PREFIX}.150"
+    # Tenta obter do arquivo network_data.txt (linha 'DHCP Range: X - Y')
+    if DHCP_LINE=$(grep "^DHCP Range:" "$network_output_file" 2>/dev/null); then
+        RANGE_INICIO=$(echo "$DHCP_LINE" | awk -F'[: -]+' '{print $3}')
+        RANGE_FIM=$(echo "$DHCP_LINE" | awk -F'[: -]+' '{print $4}')
+    fi
+    if [ -z "${RANGE_INICIO:-}" ] || [ -z "${RANGE_FIM:-}" ]; then
+        RANGE_INICIO="${NETWORK_PREFIX}.100"
+        RANGE_FIM="${NETWORK_PREFIX}.150"
+    fi
 fi
+# Define DNS a ser usado
 if [ -n "$ARG_DNS_SERVER" ]; then
     IP_DNS="$ARG_DNS_SERVER"
-elif [ -z "$DNS_SERVERS_LIST" ]; then
-    IP_DNS="8.8.8.8"
-else
+elif [ -n "$CONFIGURED_DNS" ]; then
+    IP_DNS="$CONFIGURED_DNS"
+elif [ -n "$DNS_SERVERS_LIST" ]; then
     IP_DNS=$(echo "$DNS_SERVERS_LIST" | head -n1)
+else
+    IP_DNS="8.8.8.8"
 fi
 
 DNSMASQ_LTSP_CONF="/etc/dnsmasq.d/ltsp-dnsmasq.conf"
@@ -79,20 +96,16 @@ echo "    • DNS Server: $IP_DNS"
 sed -i '/^dhcp-range=.*/d' "$DNSMASQ_LTSP_CONF"
 echo "dhcp-range=${RANGE_INICIO},${RANGE_FIM},12h" >> "$DNSMASQ_LTSP_CONF"
 
-# Atualiza o DNS server
-if grep -q "^dhcp-option=6," "$DNSMASQ_LTSP_CONF"; then
-    sed -i "s|^dhcp-option=6,.*|dhcp-option=6,${IP_DNS}|" "$DNSMASQ_LTSP_CONF"
-else
-    echo "dhcp-option=6,${IP_DNS}" >> "$DNSMASQ_LTSP_CONF"
-fi
+# Garante exclusividade da opção DNS (remove variantes) e adiciona a correta
+sed -i '/^dhcp-option=6,.*/d' "$DNSMASQ_LTSP_CONF"
+sed -i '/^dhcp-option=option:dns-server,.*/d' "$DNSMASQ_LTSP_CONF"
+echo "dhcp-option=6,${IP_DNS}" >> "$DNSMASQ_LTSP_CONF"
 
 # Configura o gateway se encontrado
 if [ -n "$DEFAULT_GATEWAY" ]; then
-    if grep -q "^dhcp-option=3," "$DNSMASQ_LTSP_CONF"; then
-        sed -i "s|^dhcp-option=3,.*|dhcp-option=3,${DEFAULT_GATEWAY}|" "$DNSMASQ_LTSP_CONF"
-    else
-        echo "dhcp-option=3,${DEFAULT_GATEWAY}" >> "$DNSMASQ_LTSP_CONF"
-    fi
+    sed -i '/^dhcp-option=3,.*/d' "$DNSMASQ_LTSP_CONF"
+    sed -i '/^dhcp-option=option:router,.*/d' "$DNSMASQ_LTSP_CONF"
+    echo "dhcp-option=3,${DEFAULT_GATEWAY}" >> "$DNSMASQ_LTSP_CONF"
 fi
 
 # --- Ajuste das opções dhcp-boot --- 
