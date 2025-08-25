@@ -6,7 +6,7 @@ Interface: wlp9s0
   Estado: UP
 IP Address (com CIDR): 192.168.100.64
 Netmask: 255.255.255.0
-Gateway: 192.168.100.100
+Gateway: 192.168.100.1
 
 -------------------------------------
 Servidores DNS (Configuração Global):

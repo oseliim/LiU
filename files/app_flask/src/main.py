@@ -290,14 +290,6 @@ def run_all_configurations():
     image_command = None
     if not is_windows:
         image_command = ["sudo", "bash", image_script_path, ubuntu_version]
-        if autologin:
-            image_command.append("--autologin")
-        if hide_users:
-            image_command.append("--hide-users")
-        if users:
-            first_user = users[0].get('username')
-            if first_user:
-                image_command.append(first_user)
 
     # Comandos para Windows
     windows_dir = os.path.join(BASE_PROJECT_DIR, "windows")
