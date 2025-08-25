@@ -25,7 +25,10 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 TURN_ON_SCRIPT = os.path.join(BASE_DIR, "scripts", "liga.sh")
 TURN_OFF_SCRIPT = os.path.join(BASE_DIR, "scripts", "desliga.sh")
 TURN_OFF_ONE_SCRIPT = os.path.join(BASE_DIR, "scripts", "desliga_um.sh")
-EX_SCRIPT = os.path.join(BASE_DIR, "scripts", "ex1.sh")
+EX_SCRIPT = os.path.join(BASE_DIR, "scripts", "executa.sh")
+EX_INDIVIDUAL_SCRIPT = os.path.join(BASE_DIR, "scripts", "executa_um.sh")
+TURN_OFF_INTERNET_SCRIPT = os.path.join(BASE_DIR, "scripts", "desliga_net.sh")
+TURN_ON_INTERNET_SCRIPT = os.path.join(BASE_DIR, "scripts", "liga_net.sh")
 IP_FILE = os.path.join(BASE_DIR, "scripts", "maquinas")
 MAC_FILE = os.path.join(BASE_DIR, "scripts", "mac_maquinas")
 PING_FILE = os.path.join(BASE_DIR, "scripts", "ping.sh")
@@ -33,10 +36,6 @@ PING_FILE = os.path.join(BASE_DIR, "scripts", "ping.sh")
 # Configurando variáveis globais
 last_net_io = psutil.net_io_counters()
 
-# --- FUNÇÕES AUXILIARES ---
-
-
-# --- ROTAS DA APLICAÇÃO ---
 
 @app.route('/')
 def index():
@@ -212,6 +211,36 @@ def turn_off_one():
         mimetype='text/html'
     )
 
+@app.route('/turn_off_internet', methods=['POST'])
+def turn_off_internet():
+    if not os.path.exists(TURN_OFF_INTERNET_SCRIPT):
+        return Response("<p style='color:red;'>Erro: Script de desligamento da internet não encontrado!</p>", 
+                    mimetype='text/html', status=404)
+    
+    return Response(
+        stream_script_output(
+            command=["sudo", "bash", TURN_OFF_INTERNET_SCRIPT, IP_FILE],
+            success_msg="Internet desligada com sucesso!",
+            error_msg="Erro ao desligar a internet"
+        ),
+        mimetype='text/html'
+    )
+
+@app.route('/turn_on_internet', methods=['POST'])
+def turn_on_internet():
+    if not os.path.exists(TURN_ON_INTERNET_SCRIPT):
+        return Response("<p style='color:red;'>Erro: Script de ligação da internet não encontrado!</p>", 
+                    mimetype='text/html', status=404)
+    
+    return Response(
+        stream_script_output(
+            command=["sudo", "bash", TURN_ON_INTERNET_SCRIPT, IP_FILE],
+            success_msg="Internet ligada com sucesso!",
+            error_msg="Erro ao ligar a internet"
+        ),
+        mimetype='text/html'
+    )
+
 @app.route('/execute', methods=['POST'])
 def execute_command():
     data = request.get_json()
@@ -236,7 +265,28 @@ def execute_command():
         ),
         mimetype='text/html'
     )
-    
+
+@app.route('/execute_one', methods=['POST'])
+def execute_one():
+    data = request.get_json()
+    if not data or 'executed_command' not in data or 'ip' not in data:
+        return Response("<p style='color:red;'>Erro: comando ou IP não fornecido.</p>", mimetype='text/html', status=400)
+
+    user_command = data['executed_command']
+    ip = data['ip']
+
+    command_list = ["sudo", "bash", EX_INDIVIDUAL_SCRIPT, user_command, ip]
+
+    return Response(
+        stream_script_output(
+            command=command_list,
+            success_msg=f"Comando '{user_command}' executado com sucesso no PC {ip}!",
+            error_msg=f"Erro ao executar o comando '{user_command}' no PC {ip}"
+        ),
+        mimetype='text/html'
+    )
+
+
 @app.route('/cpu-info', methods=['POST'])
 def cpu_info():
     interval = 1.0
@@ -259,6 +309,7 @@ def network_info():
     last_net_io = network_info['current_net_io']
     del network_info['current_net_io']
     return jsonify(network_info)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

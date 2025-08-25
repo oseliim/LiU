@@ -52,11 +52,43 @@ install_flask_if_needed
 
 echo "[INFO] Iniciando aplicação Flask com pkexec..."
 pkexec python3 "$DIR/$APP_PATH" &
-bash -x $DIR/files/interface_gerencia/teste2.sh
-sleep 3
+
+# Define a variável com o caminho da área de trabalho
+DESKTOP_PATH=""
+
+# Verifica se o diretório "Desktop" existe
+if [ -d "$HOME/Desktop" ]; then
+    DESKTOP_PATH="$HOME/Desktop"
+# Se não, verifica se o diretório "Área de Trabalho" existe
+elif [ -d "$HOME/Área de Trabalho" ]; then
+    DESKTOP_PATH="$HOME/Área de Trabalho"
+fi
+
+# Verifica se o caminho foi encontrado antes de continuar
+if [ -z "$DESKTOP_PATH" ]; then
+    echo "Não foi possível encontrar o diretório 'Desktop' ou 'Área de Trabalho'."
+    echo "Por favor, verifique o nome da sua pasta de área de trabalho e ajuste o script."
+    exit 1
+fi
+
+# Cria o arquivo .desktop no caminho correto
+echo "[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Interface de Gerenciamento
+Comment=Atalho para abrir a Gerencia
+Exec=$DIR/files/open_gerencia.sh
+Icon=$DIR/files/LIFTO_ICON_NEW.png
+Terminal=false" > "$DESKTOP_PATH/Gerencia.desktop"
+
+# Adiciona permissão de execução
+pkexec chmod +x "$DESKTOP_PATH/Gerencia.desktop"
+
+echo "O atalho 'Gerencia.desktop' foi criado com sucesso em: $DESKTOP_PATH"
+
+pkexec $DIR/files/create_service.sh
 
 xdg-open "http://127.0.0.1:5001"
 sleep 2
-xdg-open "http://127.0.0.1:5000"
 
 wait
