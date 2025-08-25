@@ -56,16 +56,24 @@ class ImageModule {
                 this.elements.linuxOptions.style.display = '';
             }
         }
+        // Sempre que mudar SO, atualizar estado do botão próxima etapa
+        this.updateStep34NextBtn();
     }
 
     /**
      * Atualiza estado do botão próximo baseado na seleção de aplicativos
      */
     updateStep34NextBtn() {
+        const selectedOS = this.elements.osSelector ? this.elements.osSelector.value : 'linux';
         const anyChecked = Array.from(this.elements.optionalApps).some(cb => cb.checked);
-        this.elements.step34NextBtn.disabled = !anyChecked;
-        
-        if (anyChecked && this.elements.optionalAppsError) {
+        // Se for Linux, só avança se algum app estiver marcado
+        if (selectedOS === 'linux') {
+            this.elements.step34NextBtn.disabled = !anyChecked;
+        } else {
+            // Para Windows, permite avançar independentemente dos apps
+            this.elements.step34NextBtn.disabled = false;
+        }
+        if ((selectedOS === 'linux' && anyChecked) && this.elements.optionalAppsError) {
             this.elements.optionalAppsError.style.display = 'none';
             this.elements.optionalAppsError.textContent = '';
         }
@@ -75,9 +83,10 @@ class ImageModule {
      * Manipula clique no botão próximo do step 3.4
      */
     handleStep34Next() {
+        const selectedOS = this.elements.osSelector ? this.elements.osSelector.value : 'linux';
         const selectedApps = this.getSelectedApps();
-        
-        if (selectedApps.length === 0) {
+        // Se for Linux, verificar se marcou algum app
+        if (selectedOS === 'linux' && selectedApps.length === 0) {
             if (this.elements.optionalAppsError) {
                 this.elements.optionalAppsError.textContent = 'Selecione pelo menos um aplicativo adicional para prosseguir.';
                 this.elements.optionalAppsError.style.display = 'block';
@@ -85,14 +94,11 @@ class ImageModule {
             this.elements.step34NextBtn.disabled = true;
             return;
         }
-        
         if (this.elements.optionalAppsError) {
             this.elements.optionalAppsError.style.display = 'none';
             this.elements.optionalAppsError.textContent = '';
         }
-        
         this.updateFormData(selectedApps);
-        
         // Avançar para o próximo step
         const wizardManager = window.wizardManager;
         if (wizardManager) {
