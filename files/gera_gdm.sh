@@ -79,6 +79,9 @@ chmod 777 $CHROOT_DIR/usr/bin/
 # abri uma porta para execução de comandos
 cp chroot_scripts/executa.sh $CHROOT_DIR/usr/bin/
 chmod 777 $CHROOT_DIR/usr/bin/executa.sh
+#servico de desmontagem
+cp chroot_scripts/mount_home.sh $CHROOT_DIR/usr/local/sbin/
+cp chroot_scripts/mount_home.service $CHROOT_DIR/etc/systemd/system/
 
 # --- Chroot: instalação de pacotes e ajustes ---
 echo "[6] Instalando pacotes no chroot..."
@@ -145,7 +148,18 @@ disable-log-out=true
 disable-user-switching=true
 disable-lock-screen=true
 EOF
+cat > /etc/dconf/profile/gdm << 'EOF'
+user-db:user
+system-db:gdm
+file-db:/usr/share/gdm/greeter-dconf-defaults
+EOF
 
+mkdir -p /etc/dconf/db/gdm.d
+
+cat > /etc/dconf/db/gdm.d/00-login-screen << 'EOF'
+[org/gnome/login-screen]
+disable-user-list=true
+EOF
 dconf update
 
 # Perfil dconf
@@ -170,6 +184,13 @@ echo '[6.8] Sessão gráfica...'
 echo '/usr/sbin/gdm3' > /etc/X11/default-display-manager
 systemctl enable gdm3
 systemctl set-default graphical.target
+
+echo '[6.10] Desmontagem como serviço'
+
+chmod 755 /usr/local/sbin/mount_home.sh
+
+systemctl daemon-reload
+systemctl enable mount_home.service
 
 apt-get install -y net-tools virtualbox
 

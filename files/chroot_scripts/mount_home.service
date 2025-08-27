@@ -1,0 +1,15 @@
+[Unit]
+Description=Mount /home from first available external ext4 partition (retries until success)
+After=local-fs.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/mount_home.sh
+Restart=on-failure
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target
