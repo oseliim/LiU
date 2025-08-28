@@ -1,1 +1,9 @@
 aluno04:aluno
+aluno01:aluno
+aluno02:aluno
+aluno0:aluno
+aluno03:aluno
+maquina01:aluno
+maquina02:aluno
+maquina1:aluno
+maquina2:aluno

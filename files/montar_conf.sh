@@ -49,6 +49,8 @@ done
 [[ ${#usuarios_input[@]} -eq 0 ]] && { echo "❌ Nenhum usuário."; exibir_ajuda; exit 1; }
 [[ -f "$user_data_file" ]] || { echo "❌ Arquivo de senhas $user_data_file não encontrado."; exit 1; }
 
+
+
 # === Deduplicação e validação ===
 usuarios_unicos=($(printf '%s\n' "${usuarios_input[@]}" | sort -u))
 for u in "${usuarios_unicos[@]}"; do
