@@ -3,8 +3,8 @@
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_PATH="files/app_flask/src/main.py"
 VENV_PATH="$DIR/venv"
-PYTHON_VENV="$VENV_PATH/bin/python3"
-PIP_VENV="$VENV_PATH/bin/pip3"
+PYTHON_VENV="$VENV_PATH/bin/python"
+PIP_VENV="$VENV_PATH/bin/pip"
 
 # Verifica se um comando existe
 command_exists() {
@@ -43,6 +43,15 @@ create_or_activate_venv() {
     else
         echo "[INFO] Ambiente virtual Python já existe em $VENV_PATH."
     fi
+
+    # Garante que o pip exista dentro do venv
+    if [ ! -x "$PIP_VENV" ]; then
+        echo "[INFO] Pip não encontrado dentro do venv. Instalando via ensurepip..."
+        "$PYTHON_VENV" -m ensurepip --upgrade
+    fi
+
+    # Atualiza ferramentas básicas do venv
+    "$PYTHON_VENV" -m pip install --upgrade pip setuptools wheel
 }
 
 # Instala o Flask no venv se necessário
@@ -127,7 +136,9 @@ if [ -x "$DIR/files/create_service.sh" ]; then
 fi
 
 # Abre o navegador
-xdg-open "http://127.0.0.1:5001" &
+#sudo apt install firefox -y
+#google-chrome "http://127.0.0.1:5001" &
+firefox "http://127.0.0.1:5001" &
 sleep 2
 
 wait
