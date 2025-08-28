@@ -4,7 +4,8 @@
 # Objetivo: Adicionar configurações de cliente ao ltsp.conf,
 #           garantindo a integridade e estrutura do arquivo,
 #           lendo senhas do /tmp/user_data.txt e mapeando
-#           usuários *únicos* sequenciais a IPs DHCP.
+#           usuários *únicos* sequenciais a IPs DHCP,
+#           incluindo HOSTNAME=LiU01, LiU02, ...
 # Uso: sudo ./montar_conf.sh [--range INICIO-FIM] usuario1 [usuario2 ...]
 # =============================================
 
@@ -68,18 +69,21 @@ mkdir -p /etc/ltsp
 if [[ ! -f "$ltsp_conf_file" ]]; then
     cat << EOF > "$ltsp_conf_file"
 [common]
-XKBMODEL=br
-TIMEZONE=America/Sao_Paulo
 RELOGIN=1
-HOSTNAME=lifto
+HOSTNAME=liu
 LIGHTDM_CONF="greeter-hide-users=true"
+DNS_SERVER="8.8.8.8"
+GDM3_CONF="WaylandEnable=false"
 
 [clients]
 EOF
 fi
 
+# === Descobre último HOSTNAME usado ===
+ultimo_host=$(grep -o "HOSTNAME=LiU[0-9]\+" "$ltsp_conf_file" | sed 's/.*LiU//' | sort -n | tail -1)
+[[ -z "$ultimo_host" ]] && ultimo_host=0
+
 # === Adiciona usuários únicos com IPs ===
-user_count=0
 ip_suffix=$range_start
 declare -A configurados
 
@@ -103,17 +107,19 @@ for user in "${usuarios_unicos[@]}"; do
     [[ -z "$senha" ]] && { echo "❌ Senha não encontrada para $user. Pulando."; continue; }
     senha_b64=$(echo -n "$senha" | base64)
 
+    ((ultimo_host++)) # avança numerador do LiU
+
     {
         echo ""
         echo "[${ip}]"
         echo "AUTOLOGIN=${user}"
         echo "PASSWORDS_LAB=\"${user}/${senha_b64}\""
+        printf "HOSTNAME=LiU%02d\n" "$ultimo_host"
     } >> "$ltsp_conf_file"
 
-    echo "✔ $user configurado com IP $ip"
-    ((user_count++))
+    echo "✔ $user configurado com IP $ip (HOSTNAME=LiU$(printf "%02d" "$ultimo_host"))"
     ((ip_suffix++))
 done
 
-echo "[✅] $user_count usuários únicos adicionados ao $ltsp_conf_file."
+echo "[✅] Usuários adicionados ao $ltsp_conf_file (último HOSTNAME gerado = LiU$(printf "%02d" "$ultimo_host"))."
 exit 0
