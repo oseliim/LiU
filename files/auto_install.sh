@@ -48,7 +48,7 @@ if [[ ! -f "$ltsp_conf_file" ]]; then
     cat << EOF > "$ltsp_conf_file"
 [common]
 RELOGIN=1
-HOSTNAME=lifto
+HOSTNAME=liu
 LIGHTDM_CONF="greeter-hide-users=true"
 DNS_SERVER="8.8.8.8"
 GDM3_CONF="WaylandEnable=false"
