@@ -13,8 +13,6 @@ class ImageModule {
             osSelector: document.getElementById('os-selector'),
             linuxOptions: document.getElementById('linux-options'),
             ubuntuVersion: document.getElementById('ubuntu-version'),
-            desktopEnvironment: document.querySelectorAll('input[name="desktopEnvironment"]'),
-            autologinCheck: document.getElementById('autologin-check'),
             optionalApps: document.querySelectorAll('.optional-app'),
             optionalAppsError: document.getElementById('optional-apps-error'),
             step34NextBtn: document.getElementById('step-3-4-next-btn')
@@ -140,17 +138,11 @@ class ImageModule {
     getImageConfig() {
         const config = {
             version: this.elements.osSelector.value,
-            desktopEnvironment: 'xfce',
-            autologin: this.elements.autologinCheck.checked
+            desktopEnvironment: 'gdm'
         };
 
         if (config.version === 'linux') {
             config.version = this.elements.ubuntuVersion.value;
-        }
-
-        const selectedDesktop = document.querySelector('input[name="desktopEnvironment"]:checked');
-        if (selectedDesktop) {
-            config.desktopEnvironment = selectedDesktop.value;
         }
 
         return config;

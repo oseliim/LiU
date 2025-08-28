@@ -115,15 +115,10 @@ class SummaryModule {
             }
         }
 
-        const selectedDesktop = document.querySelector('input[name="desktopEnvironment"]:checked');
-        if (selectedDesktop) {
-            formData.image.desktopEnvironment = selectedDesktop.value;
-        }
+        // Ambiente gráfico padrão é GDM
+        formData.image.desktopEnvironment = 'gdm';
 
-        const autologinCheck = document.getElementById('autologin-check');
-        if (autologinCheck) {
-            formData.image.autologin = autologinCheck.checked;
-        }
+
     }
 
     /**
@@ -149,9 +144,9 @@ class SummaryModule {
             <h6 data-translate="summary_image_title">Configuração da Imagem</h6>
             <table class="table table-sm">
                 <tr><th data-translate="summary_ubuntu_version">Sistema Operacional:</th><td>${soResumo} <button class="btn btn-sm btn-link edit-step-btn" data-edit-step="3" data-translate="edit_button">Editar</button></td></tr>
-                <tr><th data-translate="summary_desktop_env">Ambiente Gráfico:</th><td>${formData.image.desktopEnvironment === 'xfce' ? 'XFCE (leve)' : 'GDM (completo)'}</td></tr>
+                <tr><th data-translate="summary_desktop_env">Ambiente Gráfico:</th><td>GDM (GNOME Display Manager) - Padrão</td></tr>
                 <tr><th data-translate="summary_additional_packages">Pacotes Adicionais:</th><td>${formData.image.additionalPackages || 'Nenhum'}</td></tr>
-                <tr><th data-translate="summary_autologin">Autologin:</th><td>${formData.image.autologin ? 'Sim' : 'Não'}</td></tr>
+
             </table>
             <hr>
             <h6 data-translate="summary_users_title">Usuários</h6>
@@ -289,8 +284,7 @@ class SummaryModule {
             image: {
                 version: formData.image.version,
                 desktopEnvironment: formData.image.desktopEnvironment,
-                additionalPackages: formData.image.additionalPackages,
-                autologin: formData.image.autologin
+                additionalPackages: formData.image.additionalPackages
             },
             users: formData.users
         };

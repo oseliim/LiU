@@ -4,9 +4,9 @@ Interface ativa principal (via rota padrão): wlp9s0
 -------------------------------------
   Interface: wlp9s0
   Estado: UP
-  IP Address (com CIDR): 192.168.100.64/24
+  IP Address (com CIDR): 192.168.3.101/24
   Netmask: 255.255.255.0
-  Gateway: 192.168.100.1
+  Gateway: 192.168.3.1
 
 -------------------------------------
 Servidores DNS (Configuração Global):

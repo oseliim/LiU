@@ -150,13 +150,7 @@
                                     <option value="windows" data-translate="os_windows_virtualized">Windows (Virtualizado)</option>
                                 </select>
                             </div>
-                            <div class="mb-3">
-                                <label for="thinorfat" class="form-label" data-translate="thinorfat">Tipo de Cliente</label>
-                                <select class="form-select" id="client-type-selector">
-                                    <option value="linux" selected data-translate="os_linux">ThinClient</option>
-                                    <option value="windows" data-translate="os_windows_virtualized">FatClient</option>
-                                </select>
-                            </div>
+
                             <div id="linux-options">
                                 <div class="mb-3">
                                     <label for="ubuntu-version" class="form-label" data-translate="ubuntu_version_label">Versão do Ubuntu:</label>
@@ -193,14 +187,10 @@
                                     </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label" data-translate="desktop_env_label">Ambiente Gráfico:</label>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="desktopEnvironment" id="desktop-xfce" value="xfce" checked>
-                                        <label class="form-check-label" for="desktop-xfce">Interface mais rápida e leve (XFCE)</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="desktopEnvironment" id="desktop-gdm" value="gdm">
-                                        <label class="form-check-label" for="desktop-gdm"> Interface mais bonita, porém mais exigente (GDM)</label>
+                                    <label class="form-label">Ambiente Gráfico:</label>
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i>
+                                        <strong>Padrão:</strong> GDM (GNOME Display Manager) - Interface mais bonita e moderna
                                     </div>
                                 </div>
                             </div>
