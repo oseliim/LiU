@@ -101,7 +101,7 @@ if port_in_use; then
     echo "[INFO] Porta 5001 já está em uso. Não iniciaremos o Flask."
 else
     echo "[INFO] Iniciando aplicação Flask dentro do ambiente virtual..."
-    "$PYTHON_VENV" "$DIR/$APP_PATH" &
+    pkexec "$PYTHON_VENV" "$DIR/$APP_PATH" &
 fi
 
 # Define a variável com o caminho da área de trabalho, usuário comum
