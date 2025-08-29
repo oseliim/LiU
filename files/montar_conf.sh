@@ -14,8 +14,7 @@ network_output_file="${SCRIPT_DIR}/tmp/network_data.txt"
 user_data_file="${SCRIPT_DIR}/tmp/user_data.txt"
 ltsp_conf_file="/etc/ltsp/ltsp.conf"
 
-range_start=100
-range_end=150
+dnsmasq_conf="/etc/dnsmasq.d/ltsp-dnsmasq.conf"
 
 function exibir_ajuda() {
     echo "Uso: sudo $0 [--range INICIO-FIM] usuario1 [usuario2 ...]"
@@ -27,6 +26,7 @@ function exibir_ajuda() {
 
 # === Argumentos ===
 usuarios_input=()
+custom_range=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --range)
@@ -34,6 +34,7 @@ while [[ $# -gt 0 ]]; do
             range_start="${2%-*}"
             range_end="${2#*-}"
             shift 2
+            custom_range=true
             ;;
         --help|-h)
             exibir_ajuda; exit 0
@@ -49,22 +50,50 @@ done
 [[ ${#usuarios_input[@]} -eq 0 ]] && { echo "❌ Nenhum usuário."; exibir_ajuda; exit 1; }
 [[ -f "$user_data_file" ]] || { echo "❌ Arquivo de senhas $user_data_file não encontrado."; exit 1; }
 
+# === Descobre range de IPs do dnsmasq (se não foi passado via --range) ===
+if ! $custom_range; then
+    if [[ -f "$dnsmasq_conf" ]]; then
+        dhcp_line=$(grep "^dhcp-range=" "$dnsmasq_conf" | head -n1)
+        if [[ -n "$dhcp_line" ]]; then
+            start_ip=$(echo "$dhcp_line" | cut -d'=' -f2 | cut -d',' -f1)
+            end_ip=$(echo   "$dhcp_line" | cut -d',' -f2)
 
+            # pega só o último octeto (ex: 30 e 100)
+            range_start=$(echo "$start_ip" | awk -F. '{print $4}')
+            range_end=$(echo "$end_ip"   | awk -F. '{print $4}')
 
-# === Deduplicação e validação ===
+            # prefixo de rede vem daqui também
+            network_prefix=$(echo "$start_ip" | cut -d. -f1-3)
+        else
+            echo "⚠️ Não achei linha dhcp-range no $dnsmasq_conf, usando padrão 192.168.1.100-150"
+            range_start=100
+            range_end=150
+            network_prefix="192.168.1"
+        fi
+    else
+        echo "⚠️ Arquivo $dnsmasq_conf não existe, usando padrão 192.168.1.100-150"
+        range_start=100
+        range_end=150
+        network_prefix="192.168.1"
+    fi
+fi
+
+# === Prefixo de rede (se não foi definido pelo dhcp-range) ===
+if [[ -z "$network_prefix" ]]; then
+    if [[ -f "$network_output_file" ]]; then
+        ip_cidr=$(awk '/IP Address \(com CIDR\):/ {print $5}' "$network_output_file")
+        network_prefix=$(cut -d/ -f1 <<< "$ip_cidr" | cut -d. -f1-3)
+    else
+        echo "⚠️ Rede não detectada, usando 192.168.1"
+        network_prefix="192.168.1"
+    fi
+fi
+
+# === Deduplicação e validação de usuários ===
 usuarios_unicos=($(printf '%s\n' "${usuarios_input[@]}" | sort -u))
 for u in "${usuarios_unicos[@]}"; do
     [[ "$u" =~ ^[a-z_][a-z0-9_-]*$ ]] || { echo "❌ Nome inválido: $u"; exit 1; }
 done
-
-# === Prefixo de rede ===
-if [[ -f "$network_output_file" ]]; then
-    ip_cidr=$(awk '/IP Address \(com CIDR\):/ {print $5}' "$network_output_file")
-    network_prefix=$(cut -d/ -f1 <<< "$ip_cidr" | cut -d. -f1-3)
-else
-    echo "⚠️ Rede não detectada, usando 192.168.1"
-    network_prefix="192.168.1"
-fi
 
 # === Garante estrutura básica do ltsp.conf ===
 mkdir -p /etc/ltsp
