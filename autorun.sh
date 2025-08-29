@@ -6,6 +6,8 @@ VENV_PATH="$DIR/.venv"
 PYTHON_VENV="$VENV_PATH/bin/python"
 PIP_VENV="$VENV_PATH/bin/pip"
 
+rm -r "$VENV_PATH"
+
 # Verifica se um comando existe
 command_exists() {
     command -v "$1" &> /dev/null
@@ -116,18 +118,6 @@ if [ -z "$DESKTOP_PATH" ]; then
     DESKTOP_PATH="$DIR"
 fi
 
-# Cria o arquivo .desktop no caminho correto para a área de trabalho
-cat > "$DESKTOP_PATH/Gerencia.desktop" << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Interface de Gerenciamento
-Comment=Atalho para abrir a Gerencia
-Exec=$DIR/files/open_gerencia.sh
-Icon=$DIR/files/LIFTO_ICON_NEW.png
-Terminal=false
-EOF
-
 # Cria o arquivo .desktop no caminho correto do menu de aplicativos DO usuário
 cat > "$APPLICATIONS_PATH/Gerencia.desktop" << EOF
 [Desktop Entry]
@@ -138,11 +128,29 @@ Comment=Atalho para abrir a Gerencia
 Exec=$DIR/files/open_gerencia.sh
 Icon=$DIR/files/LIFTO_ICON_NEW.png
 Terminal=false
+
+EOF
+
+# Cria o arquivo .desktop no caminho correto do menu de aplicativos DO usuário
+cat > "$APPLICATIONS_PATH/Instalador.desktop" << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Instalador
+Comment=Atalho para abrir o Instalador
+Exec=$DIR/files/open_instalador.sh
+Icon=$DIR/files/LiU_ICONs/Lifto_instalação_icon.png
+Terminal=false
 EOF
 
 chmod +x "$DIR/files/open_gerencia.sh"
-chmod +x "$DESKTOP_PATH/Gerencia.desktop"
-echo "O atalho 'Gerencia.desktop' foi criado com sucesso em: $DESKTOP_PATH"
+chmod +x "$DIR/files/open_instalador.sh"
+
+chmod +x "$APPLICATIONS_PATH/Gerencia.desktop"
+
+chmod +x "$APPLICATIONS_PATH/Instalador.desktop"
+
+echo "Os atalhos foram criados com sucesso em: $APPLICATIONS_PATH"
 
 chmod +x "$DIR/files/create_service.sh"
 pkexec "$DIR/files/create_service.sh"

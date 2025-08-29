@@ -93,7 +93,7 @@ install_psutil_if_needed   # <-- Mais uma
 
 
 # Executa a aplicação dentro do venv
-"$PYTHON_VENV" "$RUN_DIR/app.py"
+"$PYTHON_VENV" "$RUN_DIR/main.py"
 
 # Mantém o script rodando até que ambos os processos terminem
 wait

@@ -3,6 +3,8 @@ import os
 import subprocess
 from flask import Flask, render_template, jsonify, request, Response
 
+import mac_scanner
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -17,6 +19,7 @@ AUTO_INSTALL_SCRIPT = os.path.join(BASE_PROJECT_DIR, "auto_install.sh")
 NETWORK_SCRIPT = os.path.join(BASE_PROJECT_DIR, "network.sh")
 MONTAR_CONF_SCRIPT = os.path.join(BASE_PROJECT_DIR, "montar_conf.sh")
 IPXE_MENU = os.path.join(BASE_PROJECT_DIR, "ipxe_menu.sh")
+MAC_FILE = os.path.join(BASE_PROJECT_DIR, "interface_gerencia", "scripts", "mac_maquinas")
 
 @app.route('/')
 def index():
@@ -200,6 +203,8 @@ def run_auto_install():
         return Response(f"<p style='color:red;'>Erro: Script auto_install.sh não encontrado em {AUTO_INSTALL_SCRIPT}</p>", mimetype='text/html', status=404)
     command = ["sudo", "bash", AUTO_INSTALL_SCRIPT]
     return Response(stream_script_output(command, success_message="Instalação do LTSP concluída com sucesso!"), mimetype='text/html')
+    mac_scanner.run_mac_scanner(MAC_FILE, app.logger)
+
 @app.route('/run_network_info', methods=['POST'])
 def run_network_info():
     if not os.path.exists(NETWORK_SCRIPT):

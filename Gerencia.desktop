@@ -1,8 +1,0 @@
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Interface de Gerenciamento
-Comment=Atalho para abrir a Gerencia
-Exec=/home/tandson/Documents/gredes/git/LiU/files/open_gerencia.sh
-Icon=/home/tandson/Documents/gredes/git/LiU/files/LIFTO_ICON_NEW.png
-Terminal=false
