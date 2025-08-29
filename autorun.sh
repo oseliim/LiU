@@ -116,7 +116,7 @@ if [ -z "$DESKTOP_PATH" ]; then
 fi
 
 # Cria o arquivo .desktop no caminho correto
-cat > "$DESKTOP_PATH/Gerencia.desktop" <<EOF
+cat > "$DESKTOP_PATH/Gerencia.desktop" << EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -130,15 +130,13 @@ EOF
 chmod +x "$DESKTOP_PATH/Gerencia.desktop"
 echo "O atalho 'Gerencia.desktop' foi criado com sucesso em: $DESKTOP_PATH"
 
-# Executa create_service.sh como usuário comum
-if [ -x "$DIR/files/create_service.sh" ]; then
-    "$DIR/files/create_service.sh"
-fi
+chmod +x "$DIR/files/create_service.sh"
+pkexec "$DIR/files/create_service.sh"
 
 # Abre o navegador
 #sudo apt install firefox -y
 #google-chrome "http://127.0.0.1:5001" &
-firefox "http://127.0.0.1:5001" &
+xdg-open "http://127.0.0.1:5001" &
 sleep 2
 
 wait
