@@ -46,9 +46,9 @@ cp LIFTO_ICON.svg "$CHROOT_DIR/usr/share/icons/Yaru/scalable/actions/view-app-gr
 # --- Copia de arquivos do host ---
 #Caso tenha os arquivos
 #cp apps/VMware-*.bundle "$CHROOT_DIR/"
-cp -r tmp/apps_pre_install.sh "$CHROOT_DIR/"
+cp apps_pre_install.sh "$CHROOT_DIR/"
 chmod +x "$CHROOT_DIR/apps_pre_install.sh"
-cp tmp/additional_packages.txt "$CHROOT_DIR/"
+cp -r tmp "$CHROOT_DIR/"
 
 # --- Montagem de FS críticos ---
 #echo "[4] Montando fs críticos no chroot..."
