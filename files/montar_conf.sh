@@ -89,10 +89,16 @@ if [[ -z "$network_prefix" ]]; then
     fi
 fi
 
-# === Deduplicação e validação de usuários ===
-usuarios_unicos=($(printf '%s\n' "${usuarios_input[@]}" | sort -u))
-for u in "${usuarios_unicos[@]}"; do
+
+# === Deduplicação mantendo ordem de entrada e validação de usuários ===
+usuarios_unicos=()
+for u in "${usuarios_input[@]}"; do
     [[ "$u" =~ ^[a-z_][a-z0-9_-]*$ ]] || { echo "❌ Nome inválido: $u"; exit 1; }
+    skip=false
+    for added in "${usuarios_unicos[@]}"; do
+        [[ "$u" == "$added" ]] && skip=true && break
+    done
+    $skip || usuarios_unicos+=("$u")
 done
 
 # === Garante estrutura básica do ltsp.conf ===
@@ -111,7 +117,7 @@ EOF
 fi
 
 # === Descobre último HOSTNAME usado ===
-ultimo_host=$(grep -o "HOSTNAME=LiU[0-9]\+" "$ltsp_conf_file" | sed 's/.*LiU//' | sort -n | tail -1)
+ultimo_host=$(grep -o "HOSTNAME=LiU[0-100]\+" "$ltsp_conf_file" | sed 's/.*LiU//' | sort -n | tail -1)
 [[ -z "$ultimo_host" ]] && ultimo_host=0
 
 # === Adiciona usuários únicos com IPs ===
