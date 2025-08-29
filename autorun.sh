@@ -2,7 +2,7 @@
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_PATH="files/app_flask/src/main.py"
-VENV_PATH="$DIR/venv"
+VENV_PATH="$DIR/.venv"
 PYTHON_VENV="$VENV_PATH/bin/python"
 PIP_VENV="$VENV_PATH/bin/pip"
 
@@ -105,6 +105,7 @@ fi
 # Define a variável com o caminho da área de trabalho, usuário comum
 USER_HOME="$HOME"
 DESKTOP_PATH=""
+APPLICATIONS_PATH="$USER_HOME/.local/share/applications"
 if [ -d "$USER_HOME/Desktop" ]; then
     DESKTOP_PATH="$USER_HOME/Desktop"
 elif [ -d "$USER_HOME/Área de Trabalho" ]; then
@@ -115,7 +116,7 @@ if [ -z "$DESKTOP_PATH" ]; then
     DESKTOP_PATH="$DIR"
 fi
 
-# Cria o arquivo .desktop no caminho correto
+# Cria o arquivo .desktop no caminho correto para a área de trabalho
 cat > "$DESKTOP_PATH/Gerencia.desktop" << EOF
 [Desktop Entry]
 Version=1.0
@@ -127,6 +128,19 @@ Icon=$DIR/files/LIFTO_ICON_NEW.png
 Terminal=false
 EOF
 
+# Cria o arquivo .desktop no caminho correto do menu de aplicativos DO usuário
+cat > "$APPLICATIONS_PATH/Gerencia.desktop" << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Interface de Gerenciamento
+Comment=Atalho para abrir a Gerencia
+Exec=$DIR/files/open_gerencia.sh
+Icon=$DIR/files/LIFTO_ICON_NEW.png
+Terminal=false
+EOF
+
+chmod +x "$DIR/files/open_gerencia.sh"
 chmod +x "$DESKTOP_PATH/Gerencia.desktop"
 echo "O atalho 'Gerencia.desktop' foi criado com sucesso em: $DESKTOP_PATH"
 
@@ -136,7 +150,7 @@ pkexec "$DIR/files/create_service.sh"
 # Abre o navegador
 #sudo apt install firefox -y
 #google-chrome "http://127.0.0.1:5001" &
-xdg-open "http://127.0.0.1:5001" &
+firefox --new-tab "http://127.0.0.1:5001" 
 sleep 2
 
 wait
