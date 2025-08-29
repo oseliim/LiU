@@ -313,55 +313,56 @@ class SummaryModule {
      * @param {Object} payload - Payload das configurações
      */
     async applyAllConfigurations(payload) {
-        const response = await fetch('/run_all_configurations', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-            this.elements.applyOutput.innerHTML += `<p style="color:red;">Erro na execução da configuração: ${response.status} ${response.statusText}</p>`;
-            return;
-        }
-
-        await this.handleConfigurationResponse(response);
-    }
-
-    /**
-     * Manipula resposta da configuração
-     * @param {Response} response - Resposta da requisição
-     */
-    async handleConfigurationResponse(response) {
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-        let progress = 0;
-
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            
-            buffer += decoder.decode(value, { stream: true });
-            this.elements.applyOutput.innerHTML = buffer;
-            this.elements.applyOutput.scrollTop = this.elements.applyOutput.scrollHeight;
-
-            // Detecta o marcador de finalização do backend
-            if (buffer.includes("id='install-finished'")) {
-                this.showFinalStep();
-                break;
-            }
-            
-            // Verifica se o buffer contém a mensagem de sucesso
-            if (buffer.includes("Configurações LTSP aplicadas com sucesso!")) {
-                progress = 100;
-                this.showFinalStep();
+        this.elements.applyOutput.innerHTML = '<p>Enviando configurações ao servidor e iniciando scripts...</p>';
+        this.elements.applyOutput.style.display = 'block';
+        this.updateProgressBar(5);
+        let progress = 5;
+        const steps = [60, 70, 80, 90]; // DNSMASQ, USERS, MONTAR_CONF, IMAGE
+        // Corrigir escopo do timer para não sobrescrever
+        let timers = [];
+        const setProgressSmoothly = (target, module) => {
+            const timer = setInterval(() => {
+                if (progress < target) {
+                    progress += 1;
+                    module.updateProgressBar(progress);
+                } else {
+                    clearInterval(timer);
+                }
+            }, 40);
+            timers.push(timer);
+        };
+        setProgressSmoothly(steps[0], this); // Início DNSMASQ
+        try {
+            const response = await fetch('/run_all_configurations', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            setProgressSmoothly(steps[1], this); // USERS
+            const result = await response.json();
+            setProgressSmoothly(steps[2], this); // MONTAR_CONF
+            if (response.ok && result.success) {
+                setProgressSmoothly(100, this);
+                this.elements.applyOutput.innerHTML += `<p style='color:green;'>Configuração concluída com sucesso!</p>`;
+                setTimeout(() => {
+                    timers.forEach(t => clearInterval(t));
+                    this.updateProgressBar(100);
+                    this.showFinalStep();
+                }, 1000);
             } else {
-                progress = Math.min(95, progress + 5);
+                let errorMsg = result.error || 'Erro desconhecido na configuração.';
+                this.elements.applyOutput.innerHTML += `<p style='color:red;'>${errorMsg}</p>`;
+                timers.forEach(t => clearInterval(t));
+                this.updateProgressBar(0);
             }
-
-            this.updateProgressBar(progress);
+        } catch (e) {
+            this.elements.applyOutput.innerHTML += `<p style='color:red;'>Erro inesperado: ${e}</p>`;
+            timers.forEach(t => clearInterval(t));
+            this.updateProgressBar(0);
         }
     }
+
+
 
     /**
      * Atualiza barra de progresso

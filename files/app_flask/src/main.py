@@ -244,7 +244,6 @@ def run_all_configurations():
     Espera um JSON com as configurações de rede, imagem e usuários para executar
     todas as etapas de configuração do servidor LTSP de forma sequencial.
     """
-    
     data = request.get_json()
     app.logger.info(f"Received data for configuration: {data}")
 
@@ -271,21 +270,18 @@ def run_all_configurations():
     if additional_packages:
         additional_packages_file = os.path.join(BASE_PROJECT_DIR, "tmp", "additional_packages.txt")
         with open(additional_packages_file, 'w', encoding='utf-8') as f:
-            # Remove espaços extras antes de gravar
             for package in additional_packages:
                 f.write(f"{package.strip()}\n")
         app.logger.info(f"Additional packages saved to {additional_packages_file}")
     else:
         additional_packages_file = None
 
-    # Determinar qual script de imagem usar
     windows_selected = 'windows' in image_config.get('version', '').lower()
     if windows_selected:
         image_script_path = os.path.join(BASE_PROJECT_DIR, "gera_windows.sh")
     else:
         image_script_path = GERA_GDM_SCRIPT if desktop_env == 'gdm' else GERA_XFCE_SCRIPT
     
-    # Preparar comandos
     dnsmasq_command = ["sudo", "bash", DNSMASQ_CONF_SCRIPT]
     if network_config.get('dhcpRangeStart') and network_config.get('dhcpRangeEnd'):
         dnsmasq_command.extend([
@@ -297,84 +293,111 @@ def run_all_configurations():
     
     image_command = ["sudo", "bash", image_script_path, ubuntu_version]
 
-    # Comandos para Linux
-
-    # Este gerador irá produzir o output de todos os scripts em sequência
-    def combined_stream():
-        # --- 1. DNSMASQ CONFIG ---
-        yield "<p><strong>--- Configurando dnsmasq ---</strong></p>"
+    # Execução sequencial sem streaming, checando retorno de cada etapa
+    result = {
+        "dnsmasq": None,
+        "users": [],
+        "montar_conf": None,
+        "image": None,
+        "ipxe": None,
+        "success": False,
+        "error": None
+    }
+    # 1. DNSMASQ CONFIG
+    try:
         app.logger.info(f"Executing dnsmasq config: {' '.join(dnsmasq_command)}")
-        proc_dnsmasq = subprocess.Popen(dnsmasq_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1, universal_newlines=True, cwd=BASE_PROJECT_DIR)
-        for line in proc_dnsmasq.stdout: yield f"<p>{line.strip()}</p>"
-        for line in proc_dnsmasq.stderr: yield f"<p style='color:red;'>{line.strip()}</p>"
-        proc_dnsmasq.wait()
+        proc_dnsmasq = subprocess.run(dnsmasq_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=BASE_PROJECT_DIR)
+        result["dnsmasq"] = {
+            "returncode": proc_dnsmasq.returncode,
+            "stdout": proc_dnsmasq.stdout,
+            "stderr": proc_dnsmasq.stderr
+        }
         if proc_dnsmasq.returncode != 0:
-            yield f"<p style='color:red;'>Falha na configuração do dnsmasq. Código: {proc_dnsmasq.returncode}</p>"
-            return
-        yield "<p style='color:green;'>Configuração do dnsmasq concluída.</p>"
+            result["error"] = f"Falha na configuração do dnsmasq. Código: {proc_dnsmasq.returncode}"
+            return jsonify(result), 500
+    except Exception as e:
+        result["error"] = f"Erro inesperado na configuração do dnsmasq: {e}"
+        return jsonify(result), 500
 
-        # --- 2. USER CONFIG ---
-        yield "<p><strong>--- Iniciando configuração de usuários ---</strong></p>"
-        created_usernames = []
-        for i, user in enumerate(users):
-            username, password = user.get('username'), user.get('password')
-            if not username or not password:
-                yield f"<p style='color:orange;'>Aviso: Usuário {i+1} tem dados incompletos e será ignorado.</p>"
-                continue
-            yield f"<p>Configurando usuário: {username}</p>"
-            user_conf_command = ["sudo", "bash", USER_CONF_SCRIPT, username, password]
-            app.logger.info(f"Executing user configuration: {' '.join(user_conf_command)}")
-            process_user = subprocess.Popen(user_conf_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1, universal_newlines=True, cwd=BASE_PROJECT_DIR)
-            for line in process_user.stdout: yield f"<p>{line.strip()}</p>"
-            for line in process_user.stderr: yield f"<p style='color:red;'>{line.strip()}</p>"
-            process_user.wait()
-            if process_user.returncode == 0:
-                yield f"<p style='color:green;'>Configuração do usuário {username} concluída.</p>"
-                created_usernames.append(username)
-            else:
-                yield f"<p style='color:red;'>Falha na configuração do usuário {username}. Código: {process_user.returncode}</p>"
-        
-        if created_usernames:
-            montar_conf_command = ["sudo", "bash", MONTAR_CONF_SCRIPT] + created_usernames
-            app.logger.info(f"Executando montar_conf.sh para os usuários: {' '.join(created_usernames)}")
-            process_montar = subprocess.Popen(montar_conf_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1, universal_newlines=True, cwd=BASE_PROJECT_DIR)
-            for line in process_montar.stdout: yield f"<p>[montar_conf] {line.strip()}</p>"
-            for line in process_montar.stderr: yield f"<p style='color:red;'>[montar_conf] {line.strip()}</p>"
-            process_montar.wait()
-            if process_montar.returncode == 0:
-                yield f"<p style='color:green;'>montar_conf.sh executado com sucesso para os usuários: {' '.join(created_usernames)}.</p>"
-            else:
-                yield f"<p style='color:red;'>Falha ao executar montar_conf.sh. Código: {process_montar.returncode}</p>"
-        
-        # --- 3. IMAGE GENERATION ---
-        yield "<p><strong>--- Iniciando geração da imagem ---</strong></p>"
+    # 2. USER CONFIG
+    created_usernames = []
+    for i, user in enumerate(users):
+        username, password = user.get('username'), user.get('password')
+        if not username or not password:
+            result["users"].append({"username": username, "status": "incomplete"})
+            continue
+        user_conf_command = ["sudo", "bash", USER_CONF_SCRIPT, username, password]
+        app.logger.info(f"Executing user configuration: {' '.join(user_conf_command)}")
+        proc_user = subprocess.run(user_conf_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=BASE_PROJECT_DIR)
+        user_status = {
+            "username": username,
+            "returncode": proc_user.returncode,
+            "stdout": proc_user.stdout,
+            "stderr": proc_user.stderr
+        }
+        if proc_user.returncode == 0:
+            user_status["status"] = "success"
+            created_usernames.append(username)
+        else:
+            user_status["status"] = "fail"
+        result["users"].append(user_status)
+
+    # 2.5. MONTAR_CONF
+    if created_usernames:
+        montar_conf_command = ["sudo", "bash", MONTAR_CONF_SCRIPT] + created_usernames
+        app.logger.info(f"Executando montar_conf.sh para os usuários: {' '.join(created_usernames)}")
+        proc_montar = subprocess.run(montar_conf_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=BASE_PROJECT_DIR)
+        result["montar_conf"] = {
+            "returncode": proc_montar.returncode,
+            "stdout": proc_montar.stdout,
+            "stderr": proc_montar.stderr
+        }
+        if proc_montar.returncode != 0:
+            result["error"] = f"Falha ao executar montar_conf.sh. Código: {proc_montar.returncode}"
+            return jsonify(result), 500
+
+    # 3. IMAGE GENERATION
+    try:
         app.logger.info(f"Executing image generation: {' '.join(image_command)}")
-        process_image = subprocess.Popen(image_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1, universal_newlines=True, cwd=BASE_PROJECT_DIR)
-        for line in process_image.stdout: yield f"<p>{line.strip()}</p>"
-        for line in process_image.stderr: yield f"<p style='color:red;'>{line.strip()}</p>"
-        process_image.wait()
-        if process_image.returncode != 0:
-            yield f"<p style='color:red;'>Falha na geração da imagem. Código: {process_image.returncode}</p>"
-        else:
-            yield "<p style='color:green;'>Geração da imagem concluída.</p>"
+        proc_image = subprocess.run(image_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=BASE_PROJECT_DIR)
+        result["image"] = {
+            "returncode": proc_image.returncode,
+            "stdout": proc_image.stdout,
+            "stderr": proc_image.stderr
+        }
+        if proc_image.returncode != 0:
+            result["error"] = f"Falha na geração da imagem. Código: {proc_image.returncode}"
+            return jsonify(result), 500
+    except Exception as e:
+        result["error"] = f"Erro inesperado na geração da imagem: {e}"
+        return jsonify(result), 500
 
-        # --- 4. iPXE MENU EXECUÇÃO ---
-        yield "<p><strong>--- Executando menu iPXE ---</strong></p>"
-        if not os.path.isfile(IPXE_MENU):
-            yield f"<p style='color:red;'>Erro: Arquivo IPXE_MENU não encontrado: {IPXE_MENU}</p>"
-        else:
-            image_name = f"ubuntu{desktop_env}_{ubuntu_version}"
-            ipxe_command = ["sudo", "bash", IPXE_MENU, image_name]
-            try:
-                result = subprocess.run(ipxe_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
-                yield f"<p style='color:green;'>iPXE menu executado com sucesso:<br><pre>{result.stdout}</pre></p>"
-            except subprocess.CalledProcessError as e:
-                yield f"<p style='color:red;'>Erro ao executar iPXE menu:<br><pre>{e.stderr}</pre></p>"
+    # 4. iPXE MENU EXECUÇÃO
+    if not os.path.isfile(IPXE_MENU):
+        result["ipxe"] = {"error": f"Arquivo IPXE_MENU não encontrado: {IPXE_MENU}"}
+        result["error"] = result["ipxe"]["error"]
+        return jsonify(result), 500
+    else:
+        image_name = f"ubuntu{desktop_env}_{ubuntu_version}"
+        ipxe_command = ["sudo", "bash", IPXE_MENU, image_name]
+        try:
+            proc_ipxe = subprocess.run(ipxe_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=BASE_PROJECT_DIR)
+            result["ipxe"] = {
+                "returncode": proc_ipxe.returncode,
+                "stdout": proc_ipxe.stdout,
+                "stderr": proc_ipxe.stderr
+            }
+            if proc_ipxe.returncode != 0:
+                result["error"] = f"Erro ao executar iPXE menu. Código: {proc_ipxe.returncode}"
+                return jsonify(result), 500
+        except Exception as e:
+            result["ipxe"] = {"error": f"Erro inesperado ao executar iPXE menu: {e}"}
+            result["error"] = result["ipxe"]["error"]
+            return jsonify(result), 500
 
-        yield "<div id='install-finished'>Processo de configuração finalizado.</div>" 
-
-    # A função da rota agora apenas retorna a resposta, que irá iterar sobre o gerador `combined_stream`
-    return Response(combined_stream(), mimetype='text/html')
+    result["success"] = True
+    # Quando tudo executa, retorna para a tela de execução (front-end pode redirecionar)
+    return jsonify(result), 200
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.INFO)

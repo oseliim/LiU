@@ -92,15 +92,58 @@ class InstallationModule {
     /**
      * Executa o script de instalação
      */
-    executeInstallation() {
-        this.fetchScriptOutput(
-            '/run_auto_install', 
-            this.elements.installationOutput, 
-            'POST', 
-            null,
-            () => this.handleInstallationSuccess(),
-            () => this.handleInstallationError()
-        );
+    async executeInstallation() {
+        // Reset output
+        this.elements.startInstallationBtn.disabled = true;
+        if (this.elements.installationOutput) {
+            this.elements.installationOutput.innerHTML = '<p>Iniciando instalação...</p>';
+            this.elements.installationOutput.style.display = 'block';
+        }
+        // Barra de progresso gradual
+        let progress = 5;
+        if (this.elements.progressBarContainer) {
+            this.elements.progressBarContainer.style.display = 'flex';
+        }
+        const progressBar = document.getElementById('installation-progress-bar');
+        const setProgress = (val) => {
+            if (progressBar) {
+                progressBar.style.width = val + '%';
+                progressBar.textContent = val + '%';
+            }
+        };
+        setProgress(progress);
+        let timer = setInterval(() => {
+            if (progress < 90) {
+                progress += 1;
+                setProgress(progress);
+            } else {
+                clearInterval(timer);
+            }
+        }, 40);
+        try {
+            const response = await fetch('/run_auto_install', { method: 'POST' });
+            const text = await response.text();
+            clearInterval(timer);
+            setProgress(100);
+            if (response.ok) {
+                if (this.elements.installationOutput) {
+                    this.elements.installationOutput.innerHTML += `<p style='color:green;'>Instalação concluída com sucesso!</p>`;
+                }
+                this.handleInstallationSuccess();
+            } else {
+                if (this.elements.installationOutput) {
+                    this.elements.installationOutput.innerHTML += `<p style='color:red;'>Erro: ${text}</p>`;
+                }
+                this.handleInstallationError();
+            }
+        } catch (e) {
+            clearInterval(timer);
+            setProgress(0);
+            if (this.elements.installationOutput) {
+                this.elements.installationOutput.innerHTML += `<p style='color:red;'>Erro inesperado: ${e}</p>`;
+            }
+            this.handleInstallationError();
+        }
     }
 
     /**
@@ -136,57 +179,7 @@ class InstallationModule {
         }
     }
 
-    /**
-     * Função auxiliar para buscar saída de script
-     * @param {string} url - URL do endpoint
-     * @param {HTMLElement} outputElement - Elemento para exibir saída
-     * @param {string} method - Método HTTP
-     * @param {Object} body - Corpo da requisição
-     * @param {Function} onSuccess - Callback de sucesso
-     * @param {Function} onError - Callback de erro
-     */
-    async fetchScriptOutput(url, outputElement, method = 'GET', body = null, onSuccess = null, onError = null) {
-        try {
-            outputElement.style.display = 'block';
-            outputElement.innerHTML = '<p>Iniciando execução...</p>';
-            
-            const options = {
-                method: method,
-                headers: {}
-            };
-            
-            if (body) {
-                options.headers['Content-Type'] = 'application/json';
-                options.body = JSON.stringify(body);
-            }
-            
-            const response = await fetch(url, options);
-            
-            if (!response.ok) {
-                throw new Error(`Erro HTTP: ${response.status}`);
-            }
-            
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            
-            while (true) {
-                const { done, value } = await reader.read();
-                
-                if (done) {
-                    if (onSuccess) onSuccess();
-                    break;
-                }
-                
-                const text = decoder.decode(value);
-                outputElement.innerHTML += text;
-                outputElement.scrollTop = outputElement.scrollHeight;
-            }
-        } catch (error) {
-            console.error("Erro ao executar script:", error);
-            outputElement.innerHTML += `<p style="color:red;">Erro: ${error.message}</p>`;
-            if (onError) onError(error);
-        }
-    }
+
 }
 
 // Exportar para uso global
