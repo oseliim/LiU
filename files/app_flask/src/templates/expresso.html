@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratórios Inteligentes Unificados</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="static/css/style.css">
+<link rel="stylesheet" href="static/css/progress-bars.css">
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="text-center mb-4" data-translate="title">Laboratórios Inteligentes Unificados</h1>
+    <p class="text-center text-muted mb-5" data-translate="subtitle">Instalação Expresso — assistente automatizado</p>
+    <!-- Progress Steps -->
+    <div class="progress-container mb-5">
+        <div class="progress-step active" data-step="1">
+            <div class="step-circle">1</div>
+            <div class="step-label" data-translate="step1_label">Baixando pacotes</div>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step" data-step="2">
+            <div class="step-circle">2</div>
+            <div class="step-label" data-translate="step2_label">Transferindo arquivos</div>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step" data-step="3">
+            <div class="step-circle">3</div>
+            <div class="step-label" data-translate="step3_label">Descompactando</div>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step" data-step="4">
+            <div class="step-circle">4</div>
+            <div class="step-label" data-translate="step4_label">Finalizando</div>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="progress mb-4" style="height: 18px;">
+                <div id="main-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+            </div>
+    <div id="expresso-steps" class="d-none">
+        <div class="step-pane active" id="step-1">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title" data-translate="step1_title">Baixando pacotes essenciais</h5>
+                    <div class="progress mb-3">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="step1-progress" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                    </div>
+                    <div class="status mb-3"></div>
+                    <button class="btn btn-primary next-step-btn d-none" data-translate="next_button">Próximo</button>
+                </div>
+            </div>
+        </div>
+        <div class="step-pane" id="step-2">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title" data-translate="step2_title">Transferindo arquivos</h5>
+                    <div class="progress mb-3">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="step2-progress" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                    </div>
+                    <div class="progress-info mb-2"><span class="progress" aria-live="polite"></span> <span class="speed" aria-hidden="true"></span></div>
+                    <button class="btn btn-primary next-step-btn d-none" data-translate="next_button">Próximo</button>
+                </div>
+            </div>
+        </div>
+        <div class="step-pane" id="step-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title" data-translate="step3_title">Descompactando arquivos</h5>
+                    <div class="progress mb-3">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="step3-progress" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                    </div>
+                    <button class="btn btn-primary next-step-btn d-none" data-translate="next_button">Próximo</button>
+                </div>
+            </div>
+        </div>
+        <div class="step-pane" id="step-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title" data-translate="step4_title">Finalizando configurações</h5>
+                    <div class="progress mb-3">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="step4-progress" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                    </div>
+                    <div class="status mb-3" aria-live="polite"></div>
+                    <button class="btn btn-success finish-btn d-none" data-translate="finish_button">Finalizar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+            <div id="final-message" class="alert alert-success text-center mt-4 d-none" role="status"></div>
+            <div id="config-message" class="alert alert-success text-center mt-4" role="status">
+                Detectamos sua rede — usaremos o servidor DHCP local.
+            </div>
+            <button id="start-install-btn" class="btn btn-primary w-100 mt-4">Iniciar instalação</button>
+        </div>
+    </div>
+        <div class="logo-container gredes-logo-corner rounded d-flex justify-content-center align-items-center p-3 position-absolute">
+            <img src="../static/img/GREDES.png" alt="Logotipo GREDES" class="img-fluid logo-image-responsive">
+        </div>
+        <div class="logo-container ifto-logo-corner rounded d-flex justify-content-center align-items-center p-3 position-absolute">
+            <img src="../static/img/IFTO.png" alt="Logotipo IFTO" class="img-fluid logo-image-responsive">
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="static/js/script.js"></script>
+    <script src="static/js/expresso.js"></script>
+    <script>
+        // Automação dos passos: mostra somente o botão Iniciar + aviso de DHCP no início.
+        (function(){
+            const startBtn = document.getElementById('start-install-btn');
+            const stepsContainer = document.getElementById('expresso-steps');
+            const steps = [
+                document.getElementById('step-1'),
+                document.getElementById('step-2'),
+                document.getElementById('step-3'),
+                document.getElementById('step-4')
+            ];
+            const progressBar = document.getElementById('main-progress-bar');
+            const finalMessage = document.getElementById('final-message');
+
+            function setProgress(p){
+                progressBar.style.width = p + '%';
+                progressBar.setAttribute('aria-valuenow', String(p));
+                progressBar.textContent = p + '%';
+            }
+
+            // Simula uma tarefa que progride até 100% com callback
+            function simulateProgress(durationMs, onUpdate){
+                return new Promise((resolve) => {
+                    const start = Date.now();
+                    const timer = setInterval(() => {
+                        const elapsed = Date.now() - start;
+                        let pct = Math.min(100, Math.round((elapsed / durationMs) * 100));
+                        onUpdate(pct);
+                        if(pct >= 100){
+                            clearInterval(timer);
+                            // breve espera antes de resolver para suavizar transição
+                            setTimeout(resolve, 300);
+                        }
+                    }, 120);
+                });
+            }
+
+        async function runSteps(){
+            stepsContainer.classList.remove('d-none');
+            setProgress(0);
+
+            // Update progress steps
+            const progressSteps = document.querySelectorAll('.progress-step');
+            progressSteps.forEach(s => s.classList.remove('active', 'completed'));
+            progressSteps[0].classList.add('active');
+
+            // Step 1: baixar pacotes básicos (simples)
+            steps.forEach(s => s.classList.remove('active'));
+            steps[0].classList.add('active');
+            await simulateProgress(1800, (p) => {
+                const bar = document.getElementById('step1-progress');
+                bar.style.width = p + '%';
+                bar.setAttribute('aria-valuenow', p);
+                bar.textContent = p + '%';
+                setProgress(Math.round(p * 0.25));
+            });
+
+            progressSteps[0].classList.remove('active');
+            progressSteps[0].classList.add('completed');
+            progressSteps[1].classList.add('active');
+
+            // Step 2: baixar arquivo com velocidade/progresso
+            steps[0].classList.remove('active');
+            steps[1].classList.add('active');
+            const info2 = steps[1].querySelector('.progress-info .progress');
+            const speed2 = steps[1].querySelector('.progress-info .speed');
+            await simulateProgress(3000, (p) => {
+                const bar = document.getElementById('step2-progress');
+                bar.style.width = p + '%';
+                bar.setAttribute('aria-valuenow', p);
+                bar.textContent = p + '%';
+                info2.textContent = p + '%';
+                speed2.textContent = (Math.max(0.8, (Math.sin(p/10)+1.2)*2.5)).toFixed(1) + ' MB/s';
+                setProgress(25 + Math.round(p * 0.45));
+            });
+
+            progressSteps[1].classList.remove('active');
+            progressSteps[1].classList.add('completed');
+            progressSteps[2].classList.add('active');
+
+            // Step 3: descompactando
+            steps[1].classList.remove('active');
+            steps[2].classList.add('active');
+            const info3 = steps[2].querySelector('.progress .progress');
+            await simulateProgress(1600, (p) => {
+                const bar = document.getElementById('step3-progress');
+                bar.style.width = p + '%';
+                bar.setAttribute('aria-valuenow', p);
+                bar.textContent = p + '%';
+                info3.textContent = p + '%';
+                setProgress(70 + Math.round(p * 0.2));
+            });
+
+            progressSteps[2].classList.remove('active');
+            progressSteps[2].classList.add('completed');
+            progressSteps[3].classList.add('active');
+
+            // Step 4: configurações finais
+            steps[2].classList.remove('active');
+            steps[3].classList.add('active');
+            const status4 = steps[3].querySelector('.status');
+            await simulateProgress(1200, (p) => {
+                const bar = document.getElementById('step4-progress');
+                bar.style.width = p + '%';
+                bar.setAttribute('aria-valuenow', p);
+                bar.textContent = p + '%';
+                status4.textContent = 'Aplicando: ' + p + '%';
+                setProgress(90 + Math.round(p * 0.1));
+            });
+
+            progressSteps[3].classList.remove('active');
+            progressSteps[3].classList.add('completed');
+
+            // Finalizar
+            steps.forEach(s => s.classList.remove('active'));
+            setProgress(100);
+            finalMessage.classList.remove('d-none');
+            finalMessage.innerHTML = 'Instalação concluída. O sistema está configurado para usar o DHCP da rede atual.<br><a href="/" class="btn btn-primary mt-3">Voltar para Início</a>';
+        }
+
+            startBtn.addEventListener('click', function(){
+                startBtn.classList.add('d-none');
+                runSteps().catch(err => {
+                    finalMessage.classList.remove('d-none');
+                    finalMessage.textContent = 'Ocorreu um erro: ' + (err && err.message ? err.message : err);
+                });
+            });
+        })();
+    </script>
+
+</body>
+</html>

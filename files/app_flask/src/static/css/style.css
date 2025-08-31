@@ -1,3 +1,73 @@
+/* Expresso Instalação Styles */
+.expresso-container {
+    max-width: 500px;
+    margin: 40px auto;
+    padding: 32px 24px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+.expresso-container h1 {
+    text-align: center;
+    margin-bottom: 24px;
+    color: #2c3e50;
+}
+.info-message {
+    background: #e3f7e3;
+    color: #2d7a2d;
+    padding: 10px 16px;
+    border-radius: 6px;
+    margin-bottom: 18px;
+    font-size: 1.05em;
+    text-align: center;
+}
+#start-install-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: #1abc9c;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1em;
+    cursor: pointer;
+    margin-bottom: 28px;
+    transition: background 0.2s;
+}
+#start-install-btn:disabled {
+    background: #b2dfdb;
+    cursor: not-allowed;
+}
+.steps {
+    margin-top: 10px;
+}
+.step {
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 1em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.step:last-child {
+    border-bottom: none;
+}
+.status {
+    margin-left: 10px;
+    font-weight: bold;
+    color: #2980b9;
+}
+.progress {
+    margin-left: 10px;
+    color: #16a085;
+    font-weight: bold;
+}
+.speed {
+    margin-left: 10px;
+    color: #888;
+    font-size: 0.95em;
+}
 /* Garante visibilidade do botão e ícone de mostrar/ocultar senha */
 .toggle-password {
     min-width: 40px;
