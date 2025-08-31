@@ -116,13 +116,16 @@ GDM3_CONF="WaylandEnable=false"
 EOF
 fi
 
-# === Descobre último HOSTNAME usado ===
-ultimo_host=$(grep -o "HOSTNAME=LiU[0-100]\+" "$ltsp_conf_file" | sed 's/.*LiU//' | sort -n | tail -1)
-[[ -z "$ultimo_host" ]] && ultimo_host=0
+# === Descobre último HOSTNAME usado corretamente ===
+ultimo_host=$(grep -o "HOSTNAME=LiU[0-9]\+" "$ltsp_conf_file" | sed 's/.*LiU//' | sort -n | tail -1)
+if [[ -z "$ultimo_host" ]]; then
+    ultimo_host=0
+fi
 
 # === Adiciona usuários únicos com IPs ===
 ip_suffix=$range_start
 declare -A configurados
+
 
 for user in "${usuarios_unicos[@]}"; do
     grep -q "AUTOLOGIN=${user}" "$ltsp_conf_file" && {
@@ -144,7 +147,7 @@ for user in "${usuarios_unicos[@]}"; do
     [[ -z "$senha" ]] && { echo "❌ Senha não encontrada para $user. Pulando."; continue; }
     senha_b64=$(echo -n "$senha" | base64)
 
-    ((ultimo_host++)) # avança numerador do LiU
+    ultimo_host=$((ultimo_host+1)) # avança numerador do LiU
 
     {
         echo ""

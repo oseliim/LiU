@@ -343,18 +343,7 @@ def run_all_configurations():
         result["users"].append(user_status)
 
     # 2.5. MONTAR_CONF
-    if created_usernames:
-        montar_conf_command = ["sudo", "bash", MONTAR_CONF_SCRIPT] + created_usernames
-        app.logger.info(f"Executando montar_conf.sh para os usuários: {' '.join(created_usernames)}")
-        proc_montar = subprocess.run(montar_conf_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=BASE_PROJECT_DIR)
-        result["montar_conf"] = {
-            "returncode": proc_montar.returncode,
-            "stdout": proc_montar.stdout,
-            "stderr": proc_montar.stderr
-        }
-        if proc_montar.returncode != 0:
-            result["error"] = f"Falha ao executar montar_conf.sh. Código: {proc_montar.returncode}"
-            return jsonify(result), 500
+    # Removido: chamada redundante ao montar_conf.sh, pois user_conf.sh já executa essa configuração.
 
     # 3. IMAGE GENERATION
     try:
