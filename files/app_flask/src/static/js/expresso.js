@@ -165,8 +165,13 @@ function initExpressoStepsAndPolling() {
             const bar2 = document.getElementById('step2-progress');
             if (bar2) {
                 if (data.step2.progress) {
-                    bar2.style.width = data.step2.progress;
-                    bar2.textContent = data.step2.progress;
+                    // Ensure progress string ends with '%'
+                    let progressValue = data.step2.progress;
+                    if (!progressValue.endsWith('%')) {
+                        progressValue += '%';
+                    }
+                    bar2.style.width = progressValue;
+                    bar2.textContent = progressValue;
                 }
                 if (data.step2.speed) {
                     const speedEl = document.querySelector('#step-2 .speed');
