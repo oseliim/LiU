@@ -587,16 +587,61 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- LÓGICA PARA AGENDAR AÇÃO ---
     const scheduleForm = document.getElementById('scheduleForm');
+    const frequencySelect = document.getElementById('frequency');
+    const weeklyOptions = document.getElementById('weeklyOptions');
+    const monthlyOptions = document.getElementById('monthlyOptions');
+
+    if (frequencySelect) {
+        frequencySelect.addEventListener('change', function() {
+            const value = this.value;
+            weeklyOptions.style.display = value === 'weekly' ? 'block' : 'none';
+            monthlyOptions.style.display = value === 'monthly' ? 'block' : 'none';
+        });
+    }
+
     if (scheduleForm) {
         scheduleForm.addEventListener('submit', async function(event) {
             event.preventDefault();
-            const cronExpression = document.getElementById('cronExpression').value.trim();
+            const frequency = document.getElementById('frequency').value;
+            const scheduleTime = document.getElementById('scheduleTime').value;
             const labAction = document.getElementById('labAction').value;
             const feedbackDiv = document.getElementById('scheduleFeedback');
 
-            if (!cronExpression || !labAction) {
-                feedbackDiv.textContent = 'Por favor, preencha todos os campos.';
+            if (!frequency || !scheduleTime || !labAction) {
+                feedbackDiv.textContent = 'Por favor, preencha todos os campos obrigatórios.';
                 return;
+            }
+
+            // Validar formato do horário
+            const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+            if (!timeRegex.test(scheduleTime)) {
+                feedbackDiv.textContent = 'Horário deve estar no formato HH:MM (ex: 14:30).';
+                return;
+            }
+
+            // Construir expressão cron
+            const [hour, minute] = scheduleTime.split(':');
+            let cronExpression = '';
+
+            switch (frequency) {
+                case 'daily':
+                    cronExpression = `${minute} ${hour} * * *`;
+                    break;
+                case 'weekly':
+                    const dayOfWeek = document.getElementById('dayOfWeek').value;
+                    cronExpression = `${minute} ${hour} * * ${dayOfWeek}`;
+                    break;
+                case 'monthly':
+                    const dayOfMonth = document.getElementById('dayOfMonth').value;
+                    if (!dayOfMonth || dayOfMonth < 1 || dayOfMonth > 31) {
+                        feedbackDiv.textContent = 'Dia do mês deve ser entre 1 e 31.';
+                        return;
+                    }
+                    cronExpression = `${minute} ${hour} ${dayOfMonth} * *`;
+                    break;
+                default:
+                    feedbackDiv.textContent = 'Frequência inválida.';
+                    return;
             }
 
             feedbackDiv.textContent = 'Agendando...';
@@ -618,6 +663,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     feedbackDiv.textContent = data.message;
                     // Limpar formulário
                     scheduleForm.reset();
+                    // Esconder opções
+                    weeklyOptions.style.display = 'none';
+                    monthlyOptions.style.display = 'none';
                     // Fechar modal após 2 segundos
                     setTimeout(() => {
                         const modal = bootstrap.Modal.getInstance(document.getElementById('scheduleModal'));

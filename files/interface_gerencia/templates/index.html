@@ -102,9 +102,33 @@
                 </div>
                 <div class="modal-body">
                   <div class="mb-3">
-                    <label for="cronExpression" class="form-label">Expressão Cron</label>
-                    <input type="text" class="form-control" id="cronExpression" placeholder="Ex: 0 7 * * *" required>
-                    <div class="form-text">Use a expressão cron para definir o horário (ex: 0 7 * * * para 7h todos os dias).</div>
+                    <label for="frequency" class="form-label">Frequência</label>
+                    <select class="form-select" id="frequency" required>
+                      <option value="" selected disabled>Selecione a frequência</option>
+                      <option value="daily">Diária</option>
+                      <option value="weekly">Semanal</option>
+                      <option value="monthly">Mensal</option>
+                    </select>
+                  </div>
+                  <div class="mb-3" id="weeklyOptions" style="display: none;">
+                    <label for="dayOfWeek" class="form-label">Dia da Semana</label>
+                    <select class="form-select" id="dayOfWeek">
+                      <option value="1">Segunda-feira</option>
+                      <option value="2">Terça-feira</option>
+                      <option value="3">Quarta-feira</option>
+                      <option value="4">Quinta-feira</option>
+                      <option value="5">Sexta-feira</option>
+                      <option value="6">Sábado</option>
+                      <option value="0">Domingo</option>
+                    </select>
+                  </div>
+                  <div class="mb-3" id="monthlyOptions" style="display: none;">
+                    <label for="dayOfMonth" class="form-label">Dia do Mês</label>
+                    <input type="number" class="form-control" id="dayOfMonth" min="1" max="31" placeholder="1-31">
+                  </div>
+                  <div class="mb-3">
+                    <label for="scheduleTime" class="form-label">Horário (formato 24h)</label>
+                    <input type="text" class="form-control" id="scheduleTime" placeholder="HH:MM" pattern="[0-9]{2}:[0-9]{2}" title="Formato: HH:MM (24 horas)" required>
                   </div>
                   <div class="mb-3">
                     <label for="labAction" class="form-label">Ação</label>
