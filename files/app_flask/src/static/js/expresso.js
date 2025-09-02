@@ -195,6 +195,16 @@ function initExpressoStepsAndPolling() {
                     if (speedEl) speedEl.textContent = data.step2.speed;
                 }
             }
+            // Add green checkmark when step2 completes
+            const step2Circle = document.querySelector('#step-2 .step-circle');
+            if (step2Circle) {
+                const completed2 = (step2ProgressVal && step2ProgressVal.match(/(\d{1,3})\s*%/) && parseInt(step2ProgressVal, 10) >= 100) || (data.step2 === 'Download concluído');
+                if (completed2) {
+                    step2Circle.classList.add('completed');
+                } else {
+                    step2Circle.classList.remove('completed');
+                }
+            }
         }
         // Auto-advance to step 3 when step2 completes (100% or 'Download concluído')
         try {
