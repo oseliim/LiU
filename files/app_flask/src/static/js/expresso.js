@@ -131,6 +131,16 @@ function initExpressoStepsAndPolling() {
     let polling = null;
 
     function updateProgressUI(data) {
+        // Normalize step2 progress value (backend may send an object or simple string)
+        let step2ProgressVal = '';
+        if (data && data.step2) {
+            if (typeof data.step2 === 'string') {
+                step2ProgressVal = data.step2;
+            } else if (data.step2.progress) {
+                step2ProgressVal = data.step2.progress;
+            }
+        }
+
         // Update step statuses
         if (data.step1) {
             const status1 = document.querySelector('#step-1 .status');
@@ -201,7 +211,7 @@ function initExpressoStepsAndPolling() {
         // Update main progress bar based on completion
         let mainProgress = 0;
         if (data.step1 && data.step1.includes('concluída')) mainProgress += 25;
-        if (data.step2 && (data.step2.progress === 'Download concluído' || data.step2.includes('concluído'))) mainProgress += 25;
+    if (step2ProgressVal && (step2ProgressVal === 'Download concluído' || step2ProgressVal.includes('conclu'))) mainProgress += 25;
         if (data.step3 && data.step3.includes('concluída')) mainProgress += 25;
         if (data.step4 && data.step4.includes('concluída')) mainProgress += 25;
 
@@ -215,7 +225,7 @@ function initExpressoStepsAndPolling() {
             step.classList.remove('active', 'completed');
             if (index === 0 && data.step1 && data.step1.includes('concluída')) {
                 step.classList.add('completed');
-            } else if (index === 1 && data.step2 && (data.step2.progress === 'Download concluído' || data.step2.includes('concluído'))) {
+            } else if (index === 1 && step2ProgressVal && (step2ProgressVal === 'Download concluído' || step2ProgressVal.includes('conclu'))) {
                 step.classList.add('completed');
             } else if (index === 2 && data.step3 && data.step3.includes('concluída')) {
                 step.classList.add('completed');
