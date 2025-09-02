@@ -24,10 +24,16 @@ send_progress "step2" "Iniciando download do arquivo..."
 HOME_PATH="$HOME"
 FILE_PATH="$HOME_PATH/liu_expresso.tgz"
 FILE_PATH_ROOT="/root/liu_expresso.tgz"
-if [[ -f "$FILE_PATH" ]]; then
-    # File already present — report full progress and continue
+FILE_PATH_ROOT_FINAL="/liu_expresso.tgz"
+if [[ -f "$FILE_PATH_ROOT_FINAL" ]]; then
+    # File already present in /
     send_progress "step2_progress" "100%"
-    send_progress "step2" "Arquivo liu_expresso.tgz já presente. Pulando download."
+    send_progress "step2" "Arquivo liu_expresso.tgz já presente em /. Pulando download."
+elif [[ -f "$FILE_PATH" ]]; then
+    # File present in home
+    send_progress "step2_progress" "100%"
+    send_progress "step2" "Arquivo liu_expresso.tgz encontrado em home. Movendo para /."
+    mv "$FILE_PATH" /liu_expresso.tgz
 elif [[ -f "$FILE_PATH_ROOT" ]]; then
     # File present in /root
     send_progress "step2_progress" "100%"
