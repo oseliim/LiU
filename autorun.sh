@@ -7,6 +7,7 @@ PYTHON_VENV="$VENV_PATH/bin/python"
 PIP_VENV="$VENV_PATH/bin/pip"
 
 rm -r "$VENV_PATH"
+apt install -y ipcalc
 
 # Verifica se um comando existe
 command_exists() {
