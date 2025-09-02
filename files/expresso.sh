@@ -38,14 +38,9 @@ else
             fi
         fi
     done
-    if [[ $? -eq 0 ]]; then
-        send_progress "step2" "Download concluído."
-        mv "$FILE_PATH" /liu_expresso.tgz
-    else
-        send_progress "step2" "Erro no download."
-        exit 1
-    fi
 fi
+
+mv /root/liu_expresso.tgz /liu_expresso.tgz
 
 # Etapa 3: Extração
 send_progress "step3" "Iniciando extração do arquivo..."
