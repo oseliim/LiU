@@ -43,7 +43,8 @@ install_system_deps() {
 create_or_activate_venv() {
     if [ ! -d "$VENV_PATH" ]; then
         echo "[INFO] Criando ambiente virtual Python em $VENV_PATH ..."
-        python3 -m venv "$VENV_PATH"
+        sudo python3 -m venv "$VENV_PATH"
+        sudo chmod -R 755 "$VENV_PATH"
     else
         echo "[INFO] Ambiente virtual Python já existe em $VENV_PATH."
     fi
