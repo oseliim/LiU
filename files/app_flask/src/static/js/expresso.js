@@ -121,104 +121,118 @@ function initI18n() {
 }
 
 function initExpressoStepsAndPolling() {
-    // Steps flow (cards)
-    const stepCards = [
-        document.getElementById('card-step1'),
-        document.getElementById('card-step2'),
-        document.getElementById('card-step3'),
-        document.getElementById('card-step4')
-    ];
+    const stepsContainer = document.getElementById('expresso-steps');
     const progressBar = document.getElementById('main-progress-bar');
     const startBtn = document.getElementById('start-install-btn');
     const configMsg = document.getElementById('config-message');
     const finalMsg = document.getElementById('final-message');
+    const progressSteps = document.querySelectorAll('.progress-step');
 
-    let currentStep = -1;
     let polling = null;
 
-    function showStep(idx) {
-        stepCards.forEach((card, i) => {
-            if (card) card.classList.toggle('d-none', i !== idx);
-        });
-        if (progressBar) {
-            const percent = Math.round(((idx+1)/stepCards.length)*100);
-            progressBar.style.width = percent + '%';
-            progressBar.setAttribute('aria-valuenow', percent);
-            progressBar.textContent = percent + '%';
-        }
-        currentStep = idx;
-    }
-
-    if (startBtn) {
-        startBtn.addEventListener('click', function() {
-            startBtn.style.display = 'none';
-            if (configMsg) configMsg.style.display = 'none';
-            showStep(0);
-
-            // Start server-side expresso if route exists
-            fetch('/expresso/start', { method: 'POST' }).catch(()=>{});
-            // Start polling for progress (only if endpoint exists)
-            polling = setInterval(updateProgress, 1200);
-        });
-    }
-
-    document.querySelectorAll('.next-step-btn').forEach((btn, idx) => {
-        btn.addEventListener('click', function() {
-            showStep(idx+1);
-        });
-    });
-
-    const finishBtn = document.querySelector('.finish-btn');
-    if (finishBtn) {
-        finishBtn.addEventListener('click', function() {
-            stepCards.forEach(card => card && card.classList.add('d-none'));
-            if (progressBar) {
-                progressBar.style.width = '100%';
-                progressBar.textContent = '100%';
+    function updateProgressUI(data) {
+        // Update step statuses
+        if (data.step1) {
+            const status1 = document.querySelector('#step-1 .status');
+            if (status1) status1.textContent = data.step1;
+            const bar1 = document.getElementById('step1-progress');
+            if (bar1 && data.step1.includes('concluída')) {
+                bar1.style.width = '100%';
+                bar1.textContent = '100%';
             }
+        }
+
+        if (data.step2) {
+            const bar2 = document.getElementById('step2-progress');
+            if (bar2) {
+                if (data.step2.progress) {
+                    bar2.style.width = data.step2.progress;
+                    bar2.textContent = data.step2.progress;
+                }
+                if (data.step2.speed) {
+                    const speedEl = document.querySelector('#step-2 .speed');
+                    if (speedEl) speedEl.textContent = data.step2.speed;
+                }
+            }
+        }
+
+        if (data.step3) {
+            const bar3 = document.getElementById('step3-progress');
+            if (bar3 && data.step3.includes('concluída')) {
+                bar3.style.width = '100%';
+                bar3.textContent = '100%';
+            }
+        }
+
+        if (data.step4) {
+            const status4 = document.querySelector('#step-4 .status');
+            if (status4) status4.textContent = data.step4;
+            const bar4 = document.getElementById('step4-progress');
+            if (bar4 && data.step4.includes('concluída')) {
+                bar4.style.width = '100%';
+                bar4.textContent = '100%';
+            }
+        }
+
+        // Update main progress bar based on completion
+        let mainProgress = 0;
+        if (data.step1 && data.step1.includes('concluída')) mainProgress += 25;
+        if (data.step2 && (data.step2.progress === 'Download concluído' || data.step2.includes('concluído'))) mainProgress += 25;
+        if (data.step3 && data.step3.includes('concluída')) mainProgress += 25;
+        if (data.step4 && data.step4.includes('concluída')) mainProgress += 25;
+
+        if (progressBar) {
+            progressBar.style.width = mainProgress + '%';
+            progressBar.textContent = mainProgress + '%';
+        }
+
+        // Update progress steps visual
+        progressSteps.forEach((step, index) => {
+            step.classList.remove('active', 'completed');
+            if (index === 0 && data.step1 && data.step1.includes('concluída')) {
+                step.classList.add('completed');
+            } else if (index === 1 && data.step2 && (data.step2.progress === 'Download concluído' || data.step2.includes('concluído'))) {
+                step.classList.add('completed');
+            } else if (index === 2 && data.step3 && data.step3.includes('concluída')) {
+                step.classList.add('completed');
+            } else if (index === 3 && data.step4 && data.step4.includes('concluída')) {
+                step.classList.add('completed');
+            } else if (index === 0 && data.step1 && !data.step1.includes('Erro')) {
+                step.classList.add('active');
+            }
+        });
+
+        if (data.finished) {
+            if (polling) { clearInterval(polling); polling = null; }
             if (finalMsg) {
                 finalMsg.classList.remove('d-none');
-                finalMsg.textContent = 'Instala\u00e7\u00e3o Expresso conclu\u00edda!';
+                finalMsg.innerHTML = 'Instalação concluída com sucesso!<br><a href="/" class="btn btn-primary mt-3">Voltar para Início</a>';
             }
-            if (polling) { clearInterval(polling); }
-        });
+        }
     }
 
-    function updateProgress() {
+    function pollProgress() {
         fetch('/expresso/progress')
             .then(r => { if (!r.ok) throw new Error('no-progress'); return r.json(); })
             .then(data => {
-                try {
-                    // map data to page elements if present
-                    const card1 = document.getElementById('card-step1');
-                    const card2 = document.getElementById('card-step2');
-                    const card3 = document.getElementById('card-step3');
-                    const card4 = document.getElementById('card-step4');
-
-                    if (card1 && data.step1) {
-                        const s = card1.querySelector('.status'); if (s) s.textContent = data.step1;
-                    }
-                    if (card2 && data.step2) {
-                        const p = card2.querySelector('.progress'); if (p) p.textContent = data.step2.progress || data.step2;
-                        const sp = card2.querySelector('.speed'); if (sp) sp.textContent = data.step2.speed || '';
-                    }
-                    if (card3 && data.step3) {
-                        const p3 = card3.querySelector('.progress'); if (p3) p3.textContent = data.step3;
-                    }
-                    if (card4 && data.step4) {
-                        const s4 = card4.querySelector('.status'); if (s4) s4.textContent = data.step4;
-                    }
-                    if (data.finished) {
-                        if (polling) { clearInterval(polling); polling = null; }
-                        if (startBtn) startBtn.disabled = false;
-                    }
-                } catch (e) {
-                    console.warn('updateProgress map failed', e);
-                }
+                updateProgressUI(data);
             })
             .catch(() => {
                 // Ignore missing endpoint or network errors
             });
+    }
+
+    if (startBtn) {
+        startBtn.addEventListener('click', function() {
+            startBtn.classList.add('d-none');
+            if (configMsg) configMsg.style.display = 'none';
+            if (stepsContainer) stepsContainer.classList.remove('d-none');
+
+            // Start server-side expresso
+            fetch('/expresso/start', { method: 'POST' }).catch(()=>{});
+            // Start polling for progress
+            polling = setInterval(pollProgress, 1000);
+        });
     }
 }
 

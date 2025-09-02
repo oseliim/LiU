@@ -29,186 +29,50 @@ def run_expresso_install():
     }
 
     try:
-        # Etapa 1: Executar auto_install.sh para baixar pacotes básicos
-        expresso_progress['step1'] = 'Executando instalação automática...'
-        app.logger.info("Starting auto_install.sh")
-        process1 = subprocess.Popen(['sudo', 'bash', AUTO_INSTALL_SCRIPT], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=BASE_PROJECT_DIR)
-        stdout1, stderr1 = process1.communicate()
-        if process1.returncode == 0:
-            expresso_progress['step1'] = 'Concluído'
-            app.logger.info("auto_install.sh completed successfully")
-        else:
-            expresso_progress['step1'] = f'Erro: {stderr1.strip()}'
-            app.logger.error(f"auto_install.sh failed: {stderr1}")
-            return
-
-        # Etapa 2: Executar wget para download real com progresso em tempo real
-        expresso_progress['step2']['progress'] = '0%'
-        expresso_progress['step2']['speed'] = 'Iniciando download...'
-        download_path = '/teste.tgz'
-        wget_command = ['wget', '-O', download_path, 'http://192.168.100.64/downloads/teste.tgz', '--progress=dot']
-        try:
-            process_wget = subprocess.Popen(wget_command, stderr=subprocess.PIPE, text=True, bufsize=1)
-            for line in process_wget.stderr:
-                line = line.strip()
-                # Wget progress lines contain % and speed info, parse them
-                if '%' in line:
-                    # Example line:  45% [======>                             ] 123456 --.-K/s eta 2m 30s
-                    parts = line.split()
-                    percent = None
-                    speed = None
-                    for part in parts:
-                        if part.endswith('%'):
-                            percent = part
-                        elif 'K/s' in part or 'M/s' in part or 'B/s' in part:
-                            speed = part
-                    if percent:
-                        expresso_progress['step2']['progress'] = percent
-                    if speed:
-                        expresso_progress['step2']['speed'] = speed
-            process_wget.wait()
-            if process_wget.returncode == 0:
-                expresso_progress['step2']['progress'] = 'Download concluído'
-                expresso_progress['step2']['speed'] = 'Extraindo arquivo...'
-                # Extract the downloaded file
-                extract_command = ['tar', '-xvf', download_path, '-C', '/']
-                process_extract = subprocess.run(extract_command, capture_output=True, text=True)
-                if process_extract.returncode == 0:
-                    expresso_progress['step2']['progress'] = '100%'
-                    expresso_progress['step2']['speed'] = 'Extração concluída'
-                    # Clean up the downloaded file
-                    os.remove(download_path)
-                else:
-                    expresso_progress['step2']['progress'] = 'Erro na extração'
-                    expresso_progress['step2']['speed'] = f'Erro: {process_extract.stderr.strip()}'
-            else:
-                expresso_progress['step2']['progress'] = 'Erro no download'
-                expresso_progress['step2']['speed'] = f'Erro no download (código {process_wget.returncode})'
-        except Exception as e:
-            expresso_progress['step2']['progress'] = 'Erro'
-            expresso_progress['step2']['speed'] = f'Exceção: {str(e)}'
-
-        # Etapa 3: Executar expresso.sh para descompactar e configurar
-        expresso_progress['step3'] = 'Executando configuração expresso...'
         app.logger.info("Starting expresso.sh")
-        process2 = subprocess.Popen(['sudo', 'bash', EXPRESSO_SCRIPT], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=BASE_PROJECT_DIR)
-        stdout2, stderr2 = process2.communicate()
-        if process2.returncode == 0:
-            expresso_progress['step3'] = '100%'
-            app.logger.info("expresso.sh completed successfully")
+        # Run expresso.sh and capture output in real-time
+        process = subprocess.Popen(
+            ['sudo', 'bash', EXPRESSO_SCRIPT],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,  # Merge stderr into stdout
+            text=True,
+            bufsize=1,
+            cwd=BASE_PROJECT_DIR
+        )
+
+        # Read output line by line
+        for line in process.stdout:
+            line = line.strip()
+            app.logger.info(f"Expresso output: {line}")
+
+            # Parse progress messages
+            if line.startswith("PROGRESS:"):
+                parts = line.split(":", 2)
+                if len(parts) == 3:
+                    step, message = parts[1], parts[2]
+                    if step == "step1":
+                        expresso_progress['step1'] = message
+                    elif step == "step2":
+                        expresso_progress['step2']['progress'] = message
+                    elif step == "step2_progress":
+                        expresso_progress['step2']['progress'] = message
+                        # Simulate speed for download progress
+                        expresso_progress['step2']['speed'] = "Baixando..."
+                    elif step == "step3":
+                        expresso_progress['step3'] = message
+                    elif step == "step4":
+                        expresso_progress['step4'] = message
+                    elif step == "finished":
+                        expresso_progress['finished'] = True
+                        expresso_progress['step4'] = message
+
+        process.wait()
+        if process.returncode != 0:
+            expresso_progress['step4'] = f'Erro: Script terminou com código {process.returncode}'
+            app.logger.error(f"expresso.sh failed with return code {process.returncode}")
         else:
-            expresso_progress['step3'] = f'Erro: {stderr2.strip()}'
-            app.logger.error(f"expresso.sh failed: {stderr2}")
-            return
-
-        # Etapa 4: Configurações finais - Configurar rede LTSP
-        expresso_progress['step4'] = 'Configurando rede LTSP...'
-        app.logger.info("Starting LTSP network configuration")
-
-        try:
-            # Executar network.sh para coletar informações de rede
-            network_process = subprocess.run(['bash', NETWORK_SCRIPT], capture_output=True, text=True, cwd=BASE_PROJECT_DIR)
-            if network_process.returncode != 0:
-                expresso_progress['step4'] = f'Erro na coleta de rede: {network_process.stderr.strip()}'
-                app.logger.error(f"Network collection failed: {network_process.stderr}")
-                return
-
-            # Ler o arquivo network_data.txt gerado
-            if not os.path.exists(NETWORK_DATA_FILE):
-                expresso_progress['step4'] = 'Erro: Arquivo network_data.txt não encontrado'
-                app.logger.error("network_data.txt not found after network.sh execution")
-                return
-
-            with open(NETWORK_DATA_FILE, 'r') as f:
-                network_content = f.read()
-
-            # Parse network data
-            parsed_network = parse_network_data(network_content)
-            if parsed_network.get('error'):
-                expresso_progress['step4'] = f'Erro no parse da rede: {parsed_network["error"]}'
-                app.logger.error(f"Network parsing error: {parsed_network['error']}")
-                return
-
-            # Calcular subnet e gateway baseado nos dados coletados
-            ip_address = parsed_network.get('ip_address')
-            netmask = parsed_network.get('netmask')
-            gateway = parsed_network.get('gateway')
-
-            if not all([ip_address, netmask, gateway]):
-                expresso_progress['step4'] = 'Erro: Informações de rede incompletas'
-                app.logger.error(f"Incomplete network info: IP={ip_address}, Netmask={netmask}, Gateway={gateway}")
-                return
-
-            # Calcular subnet (usando os primeiros 3 octetos do IP)
-            ip_parts = ip_address.split('.')
-            if len(ip_parts) == 4:
-                subnet_base = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}"
-                dhcp_start = f"{subnet_base}.10"
-                dhcp_end = f"{subnet_base}.100"
-                proxy_subnet = f"{subnet_base}.0"
-            else:
-                expresso_progress['step4'] = 'Erro: Formato de IP inválido'
-                return
-
-            # Modificar /etc/dnsmasq.d/ltsp-dnsmasq.conf
-            dnsmasq_conf_path = '/etc/dnsmasq.d/ltsp-dnsmasq.conf'
-            if not os.path.exists(dnsmasq_conf_path):
-                expresso_progress['step4'] = f'Erro: Arquivo {dnsmasq_conf_path} não encontrado'
-                return
-
-            with open(dnsmasq_conf_path, 'r') as f:
-                dnsmasq_content = f.read()
-
-            # Fazer as substituições necessárias
-            import re
-
-            # Substituir dhcp-range regular
-            dnsmasq_content = re.sub(
-                r'dhcp-range=\d+\.\d+\.\d+\.\d+,\d+\.\d+\.\d+\.\d+,\d+h',
-                f'dhcp-range={dhcp_start},{dhcp_end},12h',
-                dnsmasq_content
-            )
-
-            # Substituir dhcp-range proxy (usar o subnet calculado)
-            dnsmasq_content = re.sub(
-                r'dhcp-range=set:proxy,\d+\.\d+\.\d+\.\d+,proxy,\d+\.\d+\.\d+\.\d+',
-                f'dhcp-range=set:proxy,{proxy_subnet},proxy,255.255.255.0',
-                dnsmasq_content,
-                flags=re.MULTILINE
-            )
-
-            # Substituir DNS server
-            dnsmasq_content = re.sub(
-                r'dhcp-option=option:dns-server\d+\.\d+\.\d+\.\d+',
-                'dhcp-option=option:dns-server,8.8.8.8',
-                dnsmasq_content
-            )
-
-            # Adicionar ou substituir router option
-            if 'dhcp-option=option:router' in dnsmasq_content:
-                dnsmasq_content = re.sub(
-                    r'dhcp-option=option:router,\d+\.\d+\.\d+\.\d+',
-                    f'dhcp-option=option:router,{gateway}',
-                    dnsmasq_content
-                )
-            else:
-                # Adicionar após a linha do DNS server
-                dnsmasq_content = dnsmasq_content.replace(
-                    'dhcp-option=option:dns-server,8.8.8.8',
-                    'dhcp-option=option:dns-server,8.8.8.8\ndhcp-option=option:router,' + gateway
-                )
-
-            # Escrever o arquivo modificado
-            with open(dnsmasq_conf_path, 'w') as f:
-                f.write(dnsmasq_content)
-
-            expresso_progress['step4'] = 'Configuração LTSP concluída'
             expresso_progress['finished'] = True
-            app.logger.info("LTSP network configuration completed successfully")
-
-        except Exception as e:
-            expresso_progress['step4'] = f'Erro na configuração: {str(e)}'
-            app.logger.error(f"Error in LTSP network configuration: {str(e)}")
+            app.logger.info("expresso.sh completed successfully")
 
     except Exception as e:
         app.logger.error(f"Error in run_expresso_install: {str(e)}")
