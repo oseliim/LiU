@@ -141,7 +141,7 @@ function initExpressoStepsAndPolling() {
             }
         }
 
-        // Update step statuses
+    // Update step statuses
         if (data.step1) {
             const status1 = document.querySelector('#step-1 .status');
             if (status1) status1.textContent = data.step1;
@@ -174,20 +174,46 @@ function initExpressoStepsAndPolling() {
         if (data.step2) {
             const bar2 = document.getElementById('step2-progress');
             if (bar2) {
-                if (data.step2.progress) {
-                    // Ensure progress string ends with '%'
-                    let progressValue = data.step2.progress;
-                    if (!progressValue.endsWith('%')) {
-                        progressValue += '%';
+                // Prefer normalized value from earlier
+                if (step2ProgressVal) {
+                    // Try to extract a numeric percentage (e.g. '19%')
+                    const m = step2ProgressVal.match(/(\d{1,3})\s*%/);
+                    if (m) {
+                        const pct = Math.max(0, Math.min(100, parseInt(m[1], 10)));
+                        bar2.style.width = pct + '%';
+                        bar2.textContent = pct + '%';
+                    } else {
+                        // Fallback: show raw string and try to append '%'
+                        let progressValue = step2ProgressVal;
+                        if (!progressValue.endsWith('%')) progressValue += '%';
+                        bar2.style.width = progressValue;
+                        bar2.textContent = progressValue;
                     }
-                    bar2.style.width = progressValue;
-                    bar2.textContent = progressValue;
                 }
                 if (data.step2.speed) {
                     const speedEl = document.querySelector('#step-2 .speed');
                     if (speedEl) speedEl.textContent = data.step2.speed;
                 }
             }
+        }
+        // Auto-advance to step 3 when step2 completes (100% or 'Download concluído')
+        try {
+            const step2Pane = document.getElementById('step-2');
+            const step3Pane = document.getElementById('step-3');
+            if (step2Pane && step3Pane) {
+                const completed2 = (step2ProgressVal && step2ProgressVal.match(/(\d{1,3})\s*%/) && parseInt(step2ProgressVal, 10) >= 100) || (data.step2 && (data.step2 === 'Download concluído' || (data.step2.progress && data.step2.progress === 'Download concluído')));
+                if (completed2) {
+                    // mark visual steps
+                    progressSteps[1].classList.remove('active');
+                    progressSteps[1].classList.add('completed');
+                    progressSteps[2].classList.add('active');
+                    // switch panes
+                    step2Pane.classList.add('d-none');
+                    step3Pane.classList.remove('d-none');
+                }
+            }
+        } catch (e) {
+            // ignore errors here to avoid breaking UI updates
         }
 
         if (data.step3) {
@@ -208,16 +234,28 @@ function initExpressoStepsAndPolling() {
             }
         }
 
-        // Update main progress bar based on completion
+        // Update main progress bar based on completion + partial progress for step2
         let mainProgress = 0;
         if (data.step1 && data.step1.includes('concluída')) mainProgress += 25;
-    if (step2ProgressVal && (step2ProgressVal === 'Download concluído' || step2ProgressVal.includes('conclu'))) mainProgress += 25;
+        // If step2 has a numeric percent, add proportional part (25% * pct/100)
+        let step2Pct = null;
+        if (step2ProgressVal) {
+            const m2 = step2ProgressVal.match(/(\d{1,3})\s*%/);
+            if (m2) step2Pct = Math.max(0, Math.min(100, parseInt(m2[1], 10)));
+        }
+        if (step2Pct !== null) {
+            mainProgress += (step2Pct / 100) * 25;
+        } else if (step2ProgressVal && (step2ProgressVal === 'Download concluído' || step2ProgressVal.toLowerCase().includes('conclu'))) {
+            mainProgress += 25;
+        }
         if (data.step3 && data.step3.includes('concluída')) mainProgress += 25;
         if (data.step4 && data.step4.includes('concluída')) mainProgress += 25;
 
+        // Round to integer for display
+        const mainProgressRounded = Math.round(mainProgress);
         if (progressBar) {
-            progressBar.style.width = mainProgress + '%';
-            progressBar.textContent = mainProgress + '%';
+            progressBar.style.width = mainProgressRounded + '%';
+            progressBar.textContent = mainProgressRounded + '%';
         }
 
         // Update progress steps visual
