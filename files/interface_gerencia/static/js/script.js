@@ -585,6 +585,55 @@ document.addEventListener('DOMContentLoaded', function() {
         startButton.addEventListener('click', startMachineMonitoring);
     }
 
+    // --- LÓGICA PARA AGENDAR AÇÃO ---
+    const scheduleForm = document.getElementById('scheduleForm');
+    if (scheduleForm) {
+        scheduleForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const cronExpression = document.getElementById('cronExpression').value.trim();
+            const labAction = document.getElementById('labAction').value;
+            const feedbackDiv = document.getElementById('scheduleFeedback');
+
+            if (!cronExpression || !labAction) {
+                feedbackDiv.textContent = 'Por favor, preencha todos os campos.';
+                return;
+            }
+
+            feedbackDiv.textContent = 'Agendando...';
+
+            try {
+                const response = await fetch('/schedule_lab_action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: labAction,
+                        cron_expression: cronExpression
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.status === 'success') {
+                    feedbackDiv.className = 'text-success';
+                    feedbackDiv.textContent = data.message;
+                    // Limpar formulário
+                    scheduleForm.reset();
+                    // Fechar modal após 2 segundos
+                    setTimeout(() => {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('scheduleModal'));
+                        modal.hide();
+                        feedbackDiv.className = 'text-danger';
+                        feedbackDiv.textContent = '';
+                    }, 2000);
+                } else {
+                    feedbackDiv.textContent = data.error || 'Erro ao agendar.';
+                }
+            } catch (error) {
+                feedbackDiv.textContent = 'Erro de rede: ' + error.message;
+            }
+        });
+    }
+
     // --- INICIALIZAÇÃO DA PÁGINA ---
     initCharts(); // Initialize server charts on load
 });

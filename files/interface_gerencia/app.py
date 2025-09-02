@@ -310,6 +310,42 @@ def network_info():
     del network_info['current_net_io']
     return jsonify(network_info)
 
+@app.route('/schedule_lab_action', methods=['POST'])
+def schedule_lab_action():
+    data = request.get_json()
+    if not data or 'action' not in data or 'cron_expression' not in data:
+        return jsonify({"error": "Ação e expressão cron são obrigatórias."}), 400
+
+    action = data['action']
+    cron_expression = data['cron_expression']
+
+    if action not in ['turn_on', 'turn_off']:
+        return jsonify({"error": "Ação inválida. Use 'turn_on' ou 'turn_off'."}), 400
+
+    # Caminho do script crontab.sh
+    crontab_script = os.path.join(BASE_DIR, "scripts", "crontab.sh")
+
+    if not os.path.exists(crontab_script):
+        return jsonify({"error": "Script de crontab não encontrado."}), 404
+
+    # Executar o script com os argumentos
+    try:
+        result = subprocess.run(
+            ["sudo", "bash", crontab_script, "--action", action, "--cron", cron_expression],
+            capture_output=True,
+            text=True,
+            cwd=BASE_DIR
+        )
+        if result.returncode == 0:
+            app.logger.info(f"Cron agendado: {action} com {cron_expression}")
+            return jsonify({"status": "success", "message": "Ação agendada com sucesso."})
+        else:
+            app.logger.error(f"Erro ao agendar cron: {result.stderr}")
+            return jsonify({"error": f"Erro ao agendar: {result.stderr}"}), 500
+    except Exception as e:
+        app.logger.error(f"Exceção ao executar crontab: {e}")
+        return jsonify({"error": f"Erro interno: {str(e)}"}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

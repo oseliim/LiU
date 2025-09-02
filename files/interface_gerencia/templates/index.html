@@ -84,6 +84,47 @@
                     </div>
                 </div>
 
+        <div class="box mt-4">
+            <h1>Agendar Ação do Laboratório</h1>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scheduleModal">
+                Configurar Agendamento
+            </button>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="scheduleModal" tabindex="-1" aria-labelledby="scheduleModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <form id="scheduleForm">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="scheduleModalLabel">Agendar Ação do Laboratório</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                  <div class="mb-3">
+                    <label for="cronExpression" class="form-label">Expressão Cron</label>
+                    <input type="text" class="form-control" id="cronExpression" placeholder="Ex: 0 7 * * *" required>
+                    <div class="form-text">Use a expressão cron para definir o horário (ex: 0 7 * * * para 7h todos os dias).</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="labAction" class="form-label">Ação</label>
+                    <select class="form-select" id="labAction" required>
+                      <option value="" selected disabled>Selecione a ação</option>
+                      <option value="turn_on">Ligar Laboratório</option>
+                      <option value="turn_off">Desligar Laboratório</option>
+                    </select>
+                  </div>
+                  <div id="scheduleFeedback" class="text-danger"></div>
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary">Agendar</button>
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
                 <div class="buttons-box col-12 row justify-content-center align-items-center mt-4">
                     <div class="col-sm-6 col-md-5 col-lg-4 d-flex justify-content-center">
                         <div class="lab-management-menu d-flex flex-row">
