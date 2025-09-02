@@ -136,9 +136,28 @@ function initExpressoStepsAndPolling() {
             const status1 = document.querySelector('#step-1 .status');
             if (status1) status1.textContent = data.step1;
             const bar1 = document.getElementById('step1-progress');
-            if (bar1 && data.step1.includes('concluída')) {
-                bar1.style.width = '100%';
-                bar1.textContent = '100%';
+            if (bar1) {
+                // Extract percentage from progress string if present
+                const match = data.step1.match(/(\d+)%/);
+                if (match) {
+                    bar1.style.width = match[1] + '%';
+                    bar1.textContent = match[1] + '%';
+                } else if (data.step1.includes('concluída')) {
+                    bar1.style.width = '100%';
+                    bar1.textContent = '100%';
+                }
+            }
+            // Automatically move to next step if completed
+            if (data.step1.includes('concluída')) {
+                progressSteps[0].classList.remove('active');
+                progressSteps[0].classList.add('completed');
+                progressSteps[1].classList.add('active');
+                if (stepsContainer) {
+                    const step1Pane = document.getElementById('step-1');
+                    const step2Pane = document.getElementById('step-2');
+                    if (step1Pane) step1Pane.classList.add('d-none');
+                    if (step2Pane) step2Pane.classList.remove('d-none');
+                }
             }
         }
 

@@ -24,7 +24,11 @@ send_progress "step2" "Iniciando download do arquivo..."
 wget -P / 'http://200.129.176.42/files/liu_expresso.tgz' 2>&1 | while read -r line; do
     if [[ $line =~ ([0-9]+)% ]]; then
         percent="${BASH_REMATCH[1]}"
-        send_progress "step2_progress" "$percent%"
+        # Only send progress update if percent changed
+        if [[ "$percent" != "$last_percent" ]]; then
+            send_progress "step2_progress" "$percent%"
+            last_percent="$percent"
+        fi
     fi
 done
 if [[ $? -eq 0 ]]; then
