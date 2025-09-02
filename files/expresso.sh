@@ -54,9 +54,11 @@ fi
 
 # Etapa 4: Criação de usuários
 send_progress "step4" "Criando usuário padrão..."
+send_progress "step4_progress" "10%"
 bash user_conf.sh aluno aluno #Criando aluno padrão
 if [[ $? -eq 0 ]]; then
     send_progress "step4" "Usuário criado com sucesso."
+    send_progress "step4_progress" "30%"
 else
     send_progress "step4" "Erro na criação do usuário."
     exit 1
@@ -64,6 +66,7 @@ fi
 
 # Alterando dnsmasq
 send_progress "step4" "Alterando configuração do dnsmasq..."
+send_progress "step4_progress" "50%"
 
 NET_FILE="tmp/network_data.txt"
 CONF_FILE="/etc/dnsmasq.d/ltsp-dnsmasq.conf"
@@ -92,6 +95,7 @@ fi
 REDE=$(ipcalc "$IP/$CIDR" | grep "Network:" | awk '{print $2}' | cut -d'/' -f1)
 
 send_progress "step4" "Criando backup da configuração dnsmasq..."
+send_progress "step4_progress" "70%"
 
 # Diretório de backup
 BKP_DIR="/etc/dnsmasq.d/bkp"
@@ -100,20 +104,24 @@ mkdir -p "$BKP_DIR"
 # Copiando arquivo de configuração para o diretório de backup
 cp "$CONF_FILE" "$BKP_DIR/$(basename "$CONF_FILE").bak"
 send_progress "step4" "Backup criado."
+send_progress "step4_progress" "80%"
 
 send_progress "step4" "Atualizando configuração dnsmasq..."
 sed -i "s|dhcp-range=set:proxy,.*|dhcp-range=set:proxy,${REDE},proxy,${NETMASK}|" "$CONF_FILE"
 sed -i "s|dhcp-option=option:router,.*|dhcp-option=option:router,${GATEWAY}|" "$CONF_FILE"
 send_progress "step4" "Configuração dnsmasq atualizada."
+send_progress "step4_progress" "90%"
 
 # Reiniciando serviços
 send_progress "step4" "Reiniciando serviços..."
+send_progress "step4_progress" "95%"
 bash reinicia.sh
 if [[ $? -ne 0 ]]; then
     send_progress "step4" "Erro ao reiniciar serviços."
     exit 1
 fi
 send_progress "step4" "Serviços reiniciados."
+send_progress "step4_progress" "100%"
 /etc/init.d/dnsmasq restart
 
 send_progress "finished" "Instalação concluída com sucesso!"
