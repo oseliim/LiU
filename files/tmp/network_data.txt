@@ -1,8 +1,8 @@
 Informações da Interface de Rede Ativa Principal:
 ==============================================
-Interface ativa principal (via rota padrão): wlp9s0
+Interface ativa principal (via rota padrão): wlan0
 -------------------------------------
-  Interface: wlp9s0
+  Interface: wlan0
   Estado: UP
   IP Address (com CIDR): 192.168.100.64/24
   Netmask: 255.255.255.0
