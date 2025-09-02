@@ -27,17 +27,17 @@ FILE_PATH_ROOT="/root/liu_expresso.tgz"
 FILE_PATH_ROOT_FINAL="/liu_expresso.tgz"
 if [[ -f "$FILE_PATH_ROOT_FINAL" ]]; then
     # File already present in /
-    send_progress "step2_progress" "100%"
     send_progress "step2" "Arquivo liu_expresso.tgz já presente em /. Pulando download."
+    send_progress "step2_progress" "100%"
 elif [[ -f "$FILE_PATH" ]]; then
     # File present in home
-    send_progress "step2_progress" "100%"
     send_progress "step2" "Arquivo liu_expresso.tgz encontrado em home. Movendo para /."
+    send_progress "step2_progress" "100%"
     mv "$FILE_PATH" /liu_expresso.tgz
 elif [[ -f "$FILE_PATH_ROOT" ]]; then
     # File present in /root
-    send_progress "step2_progress" "100%"
     send_progress "step2" "Arquivo liu_expresso.tgz encontrado em /root. Movendo para /."
+    send_progress "step2_progress" "100%"
     mv "$FILE_PATH_ROOT" /liu_expresso.tgz
 else
     wget -P "$HOME_PATH" 'http://200.129.176.42/files/liu_expresso.tgz' 2>&1 | while read -r line; do
