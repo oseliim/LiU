@@ -45,6 +45,8 @@ create_or_activate_venv() {
         echo "[INFO] Criando ambiente virtual Python em $VENV_PATH ..."
         sudo python3 -m venv "$VENV_PATH"
         sudo chmod -R 755 "$VENV_PATH"
+        echo "[INFO] Alterando propriedade do venv para o usuário normal..."
+        sudo chown -R $(whoami):$(whoami) "$VENV_PATH"
     else
         echo "[INFO] Ambiente virtual Python já existe em $VENV_PATH."
     fi
