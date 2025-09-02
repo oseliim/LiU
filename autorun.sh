@@ -35,6 +35,7 @@ install_system_deps() {
     else
         echo "[INFO] python3-venv já está instalado."
     fi
+        apt install -y python3.12-venv
 }
 
 # Cria e inicializa o ambiente virtual, se necessário
