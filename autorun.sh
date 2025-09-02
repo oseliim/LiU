@@ -159,8 +159,8 @@ pkexec "$DIR/files/create_service.sh"
 
 # Abre o navegador
 #sudo apt install firefox -y
-#google-chrome "http://127.0.0.1:5001" &
-firefox --new-tab "http://127.0.0.1:5001" 
+google-chrome "http://127.0.0.1:5001" &
+#firefox --new-tab "http://127.0.0.1:5001" 
 sleep 2
 
 wait
