@@ -23,10 +23,16 @@ fi
 send_progress "step2" "Iniciando download do arquivo..."
 HOME_PATH="$HOME"
 FILE_PATH="$HOME_PATH/liu_expresso.tgz"
+FILE_PATH_ROOT="/root/liu_expresso.tgz"
 if [[ -f "$FILE_PATH" ]]; then
     # File already present — report full progress and continue
     send_progress "step2_progress" "100%"
     send_progress "step2" "Arquivo liu_expresso.tgz já presente. Pulando download."
+elif [[ -f "$FILE_PATH_ROOT" ]]; then
+    # File present in /root
+    send_progress "step2_progress" "100%"
+    send_progress "step2" "Arquivo liu_expresso.tgz encontrado em /root. Movendo para /."
+    mv "$FILE_PATH_ROOT" /liu_expresso.tgz
 else
     wget -P "$HOME_PATH" 'http://200.129.176.42/files/liu_expresso.tgz' 2>&1 | while read -r line; do
         if [[ $line =~ ([0-9]+)% ]]; then
@@ -38,9 +44,14 @@ else
             fi
         fi
     done
+    if [[ $? -eq 0 ]]; then
+        send_progress "step2" "Download concluído."
+        mv "$FILE_PATH" /liu_expresso.tgz
+    else
+        send_progress "step2" "Erro no download."
+        exit 1
+    fi
 fi
-
-mv /root/liu_expresso.tgz /liu_expresso.tgz
 
 # Etapa 3: Extração
 send_progress "step3" "Iniciando extração do arquivo..."
