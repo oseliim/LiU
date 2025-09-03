@@ -20,7 +20,7 @@ apt update
 
 send_progress "step1_progress" "40%"
 # Pacotes comuns a todas as versões
-COMMON_PKGS="ltsp dnsmasq nfs-kernel-server openssh-server squashfs-tools ethtool net-tools epoptes debootstrap pxelinux syslinux"
+COMMON_PKGS="ltsp dnsmasq nfs-kernel-server openssh-server squashfs-tools ethtool net-tools epoptes debootstrap pxelinux syslinux wakeonlan"
 
 if [ "$UBUNTU_VERSION" -lt 24 ]; then
     send_progress "step1_progress" "50%"
