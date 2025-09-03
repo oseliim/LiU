@@ -389,7 +389,15 @@ def remove_cron_job():
     command_to_remove = data['command']
 
     try:
-        # Get current crontab
+        app.logger.info(f"Command to remove: {repr(command_to_remove)}")
+
+        # Caminho do script edit_crontab.sh
+        edit_script = os.path.join(BASE_DIR, "scripts", "edit_crontab.sh")
+
+        if not os.path.exists(edit_script):
+            return jsonify({"error": "Script de edição de crontab não encontrado."}), 404
+
+        # Get current crontab to find the line number
         result = subprocess.run(
             ["crontab", "-l"],
             capture_output=True,
@@ -399,23 +407,66 @@ def remove_cron_job():
             return jsonify({"error": "Erro ao ler crontab."}), 500
 
         cron_lines = result.stdout.strip().split('\n')
-        # Filter out the line with the matching command
-        new_cron_lines = [line for line in cron_lines if line.strip() and not line.startswith('#') and ' '.join(line.split()[5:]) != command_to_remove]
+        app.logger.info(f"Cron lines: {cron_lines}")
 
-        # Write back the filtered crontab
-        new_crontab = '\n'.join(new_cron_lines) + '\n'
+        # Find the line number of the matching command
+        def normalize_cmd(s: str) -> str:
+            """Normalize a crontab command string for comparison.
+
+            - remove common redirections (>, >>, 2>&1)
+            - strip surrounding quotes
+            - collapse whitespace
+            """
+            if not s:
+                return ''
+            # remove stderr redirection token first (allow spaced variants like '2 > & 1')
+            s = re.sub(r"\b2\s*>\s*&\s*1\b", '', s)
+            # remove redirection fragments like >> "file" or >> file or > file
+            s = re.sub(r'>+\s*(?:"[^"]*"|\'[^\']*\'|\S+)', '', s)
+            # cleanup any leftover isolated numeric tokens that may have appeared from partial removals
+            s = re.sub(r'\b2\b', '', s)
+            # strip quotes around tokens
+            s = s.replace('"', '').replace("'", '')
+            # collapse whitespace
+            s = re.sub(r'\s+', ' ', s).strip()
+            return s
+
+        line_number = None
+        normalized_target = normalize_cmd(command_to_remove)
+        app.logger.info(f"Normalized target command: {repr(normalized_target)}")
+
+        for i, line in enumerate(cron_lines, 1):
+            if line.strip() and not line.lstrip().startswith('#'):
+                # Extract command part (fields 6 and beyond)
+                parts = line.split()
+                if len(parts) >= 6:
+                    current_command = ' '.join(parts[5:])
+                    normalized_current = normalize_cmd(current_command)
+                    app.logger.info(f"Line {i}: extracted command: {repr(current_command)} -> normalized: {repr(normalized_current)}")
+                    # Exact match first, then substring match as fallback
+                    if normalized_current == normalized_target or normalized_target in normalized_current:
+                        line_number = i
+                        app.logger.info(f"Match found at line {i}")
+                        break
+
+        if line_number is None:
+            return jsonify({"error": "Agendamento não encontrado."}), 404
+
+        # Execute the edit script with the line number
         result = subprocess.run(
-            ["crontab", "-"],
-            input=new_crontab,
+            ["bash", edit_script, "--line", str(line_number)],
             capture_output=True,
-            text=True
+            text=True,
+            cwd=BASE_DIR
         )
+
         if result.returncode == 0:
-            app.logger.info(f"Cron removido: {command_to_remove}")
+            app.logger.info(f"Cron removido via script: linha {line_number}, comando {command_to_remove}")
             return jsonify({"status": "success", "message": "Agendamento removido com sucesso."})
         else:
-            app.logger.error(f"Erro ao remover cron: {result.stderr}")
+            app.logger.error(f"Erro ao executar script de remoção: {result.stderr}")
             return jsonify({"error": f"Erro ao remover: {result.stderr}"}), 500
+
     except Exception as e:
         app.logger.error(f"Exceção ao remover cron: {e}")
         return jsonify({"error": f"Erro interno: {str(e)}"}), 500
