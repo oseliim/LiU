@@ -346,6 +346,40 @@ def schedule_lab_action():
         app.logger.error(f"Exceção ao executar crontab: {e}")
         return jsonify({"error": f"Erro interno: {str(e)}"}), 500
 
+@app.route('/list_cron_jobs', methods=['GET'])
+def list_cron_jobs():
+    try:
+        result = subprocess.run(
+            ["crontab", "-l"],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode == 0:
+            cron_lines = result.stdout.strip().split('\n')
+            cron_jobs = []
+            for line in cron_lines:
+                if line.strip() and not line.startswith('#'):
+                    parts = line.split()
+                    if len(parts) >= 6:
+                        command = ' '.join(parts[5:])
+                        # Normalize command path to just script name for easier matching
+                        script_name = os.path.basename(command.split()[0])
+                        cron_jobs.append({
+                            'minute': parts[0],
+                            'hour': parts[1],
+                            'day': parts[2],
+                            'month': parts[3],
+                            'weekday': parts[4],
+                            'command': command,
+                            'script_name': script_name
+                        })
+            return jsonify({"status": "success", "cron_jobs": cron_jobs})
+        else:
+            return jsonify({"status": "success", "cron_jobs": []})
+    except Exception as e:
+        app.logger.error(f"Erro ao listar crons: {e}")
+        return jsonify({"error": f"Erro interno: {str(e)}"}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

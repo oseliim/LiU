@@ -682,6 +682,56 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // --- LÓGICA PARA VER AGENDAMENTOS ---
+    const viewSchedulesBtn = document.getElementById('viewSchedulesBtn');
+    if (viewSchedulesBtn) {
+        viewSchedulesBtn.addEventListener('click', async function() {
+            const modal = new bootstrap.Modal(document.getElementById('viewSchedulesModal'));
+            modal.show();
+
+            const schedulesList = document.getElementById('schedulesList');
+            schedulesList.innerHTML = '<p>Carregando agendamentos...</p>';
+
+            try {
+                const response = await fetch('/list_cron_jobs');
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    if (data.cron_jobs.length === 0) {
+                        schedulesList.innerHTML = '<p>Nenhum agendamento encontrado.</p>';
+                    } else {
+                        let html = '<div class="list-group">';
+                        data.cron_jobs.forEach(job => {
+                            const time = `${job.hour}:${job.minute}`;
+                        let action = 'Ação Desconhecida';
+                        let marker = '';
+                        if (job.command.includes('desliga.sh')) {
+                            action = 'Desligamento de máquinas';
+                            marker = '🔴';
+                        } else if (job.command.includes('liga.sh')) {
+                            action = 'Ligar máquinas';
+                            marker = '🔵';
+                        }
+                        html += `
+                            <div class="list-group-item">
+                                <h6 class="mb-1">${marker} ${action}</h6>
+                                <p class="mb-1">Horário: ${time}</p>
+                                <small class="text-muted">Cron: ${job.minute} ${job.hour} ${job.day} ${job.month} ${job.weekday}</small>
+                            </div>
+                        `;
+                    });
+                        html += '</div>';
+                        schedulesList.innerHTML = html;
+                    }
+                } else {
+                    schedulesList.innerHTML = '<p class="text-danger">Erro ao carregar agendamentos.</p>';
+                }
+            } catch (error) {
+                schedulesList.innerHTML = '<p class="text-danger">Erro de rede ao carregar agendamentos.</p>';
+            }
+        });
+    }
+
     // --- INICIALIZAÇÃO DA PÁGINA ---
     initCharts(); // Initialize server charts on load
 });
