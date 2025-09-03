@@ -380,6 +380,46 @@ def list_cron_jobs():
         app.logger.error(f"Erro ao listar crons: {e}")
         return jsonify({"error": f"Erro interno: {str(e)}"}), 500
 
+@app.route('/remove_cron_job', methods=['POST'])
+def remove_cron_job():
+    data = request.get_json()
+    if not data or 'command' not in data:
+        return jsonify({"error": "Comando é obrigatório."}), 400
+
+    command_to_remove = data['command']
+
+    try:
+        # Get current crontab
+        result = subprocess.run(
+            ["crontab", "-l"],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            return jsonify({"error": "Erro ao ler crontab."}), 500
+
+        cron_lines = result.stdout.strip().split('\n')
+        # Filter out the line with the matching command
+        new_cron_lines = [line for line in cron_lines if line.strip() and not line.startswith('#') and ' '.join(line.split()[5:]) != command_to_remove]
+
+        # Write back the filtered crontab
+        new_crontab = '\n'.join(new_cron_lines) + '\n'
+        result = subprocess.run(
+            ["crontab", "-"],
+            input=new_crontab,
+            capture_output=True,
+            text=True
+        )
+        if result.returncode == 0:
+            app.logger.info(f"Cron removido: {command_to_remove}")
+            return jsonify({"status": "success", "message": "Agendamento removido com sucesso."})
+        else:
+            app.logger.error(f"Erro ao remover cron: {result.stderr}")
+            return jsonify({"error": f"Erro ao remover: {result.stderr}"}), 500
+    except Exception as e:
+        app.logger.error(f"Exceção ao remover cron: {e}")
+        return jsonify({"error": f"Erro interno: {str(e)}"}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

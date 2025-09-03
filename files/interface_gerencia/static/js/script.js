@@ -684,52 +684,110 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- LÓGICA PARA VER AGENDAMENTOS ---
     const viewSchedulesBtn = document.getElementById('viewSchedulesBtn');
-    if (viewSchedulesBtn) {
-        viewSchedulesBtn.addEventListener('click', async function() {
-            const modal = new bootstrap.Modal(document.getElementById('viewSchedulesModal'));
-            modal.show();
+    let schedulesModal; // Store modal instance
 
-            const schedulesList = document.getElementById('schedulesList');
-            schedulesList.innerHTML = '<p>Carregando agendamentos...</p>';
+    async function loadSchedules() {
+        const schedulesList = document.getElementById('schedulesList');
+        schedulesList.innerHTML = '<p>Carregando agendamentos...</p>';
 
-            try {
-                const response = await fetch('/list_cron_jobs');
-                const data = await response.json();
+        try {
+            const response = await fetch('/list_cron_jobs');
+            const data = await response.json();
 
-                if (data.status === 'success') {
-                    if (data.cron_jobs.length === 0) {
-                        schedulesList.innerHTML = '<p>Nenhum agendamento encontrado.</p>';
+            if (data.status === 'success') {
+                if (data.cron_jobs.length === 0) {
+                    schedulesList.innerHTML = '<p>Nenhum agendamento encontrado.</p>';
+                } else {
+                    let html = '<div class="list-group">';
+                    data.cron_jobs.forEach(job => {
+                        const time = `${job.hour}:${job.minute}`;
+                    let action = 'Ação Desconhecida';
+                    let marker = '';
+                    if (job.command.includes('desliga.sh')) {
+                        action = 'Desligamento de máquinas';
+                        marker = '🔴';
+                    } else if (job.command.includes('liga.sh')) {
+                        action = 'Ligar máquinas';
+                        marker = '🔵';
+                    }
+                    let scheduleDescription = '';
+                    if (job.day === '*' && job.month === '*' && job.weekday === '*') {
+                        // Daily
+                        scheduleDescription = `Todo dia às ${time}`;
+                    } else if (job.weekday !== '*') {
+                        // Weekly
+                        const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                        const dayName = daysOfWeek[parseInt(job.weekday)] || job.weekday;
+                        scheduleDescription = `Semanalmente às ${time} na ${dayName}`;
+                    } else if (job.day !== '*') {
+                        // Monthly
+                        scheduleDescription = `Mensalmente às ${time} no dia ${job.day}`;
                     } else {
-                        let html = '<div class="list-group">';
-                        data.cron_jobs.forEach(job => {
-                            const time = `${job.hour}:${job.minute}`;
-                        let action = 'Ação Desconhecida';
-                        let marker = '';
-                        if (job.command.includes('desliga.sh')) {
-                            action = 'Desligamento de máquinas';
-                            marker = '🔴';
-                        } else if (job.command.includes('liga.sh')) {
-                            action = 'Ligar máquinas';
-                            marker = '🔵';
-                        }
-                        html += `
-                            <div class="list-group-item">
+                        scheduleDescription = `Horário: ${time}`;
+                    }
+                    html += `
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div>
                                 <h6 class="mb-1">${marker} ${action}</h6>
-                                <p class="mb-1">Horário: ${time}</p>
+                                <p class="mb-1">${scheduleDescription}</p>
                                 <small class="text-muted">Cron: ${job.minute} ${job.hour} ${job.day} ${job.month} ${job.weekday}</small>
                             </div>
-                        `;
+                            <button class="btn btn-danger btn-sm remove-job-btn" data-command="${job.command.replace(/"/g, '"')}">Remover</button>
+                        </div>
+                    `;
+                });
+                    html += '</div>';
+                    schedulesList.innerHTML = html;
+
+                    // Add event listeners to the remove buttons
+                    document.querySelectorAll('.remove-job-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const command = this.getAttribute('data-command').replace(/"/g, '"');
+                            removeCronJob(command);
+                        });
                     });
-                        html += '</div>';
-                        schedulesList.innerHTML = html;
-                    }
-                } else {
-                    schedulesList.innerHTML = '<p class="text-danger">Erro ao carregar agendamentos.</p>';
                 }
-            } catch (error) {
-                schedulesList.innerHTML = '<p class="text-danger">Erro de rede ao carregar agendamentos.</p>';
+            } else {
+                schedulesList.innerHTML = '<p class="text-danger">Erro ao carregar agendamentos.</p>';
             }
+        } catch (error) {
+            schedulesList.innerHTML = '<p class="text-danger">Erro de rede ao carregar agendamentos.</p>';
+        }
+    }
+
+    if (viewSchedulesBtn) {
+        viewSchedulesBtn.addEventListener('click', async function() {
+            schedulesModal = new bootstrap.Modal(document.getElementById('viewSchedulesModal'));
+            schedulesModal.show();
+            await loadSchedules();
         });
+    }
+
+    // --- FUNÇÃO PARA REMOVER AGENDAMENTO ---
+    async function removeCronJob(command) {
+        if (!confirm('Tem certeza que deseja remover este agendamento?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/remove_cron_job', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: command })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.status === 'success') {
+                alert('Agendamento removido com sucesso!');
+                // Recarregar a lista de agendamentos sem fechar o modal
+                await loadSchedules();
+            } else {
+                alert('Erro ao remover agendamento: ' + (data.error || 'Erro desconhecido'));
+            }
+        } catch (error) {
+            alert('Erro de rede: ' + error.message);
+        }
     }
 
     // --- INICIALIZAÇÃO DA PÁGINA ---
