@@ -45,6 +45,48 @@ add_cron_job() {
     echo "✅ Entrada adicionada: $CRONLINE"
 }
 
+# Função para remover cron job por número da linha
+# Esta função remove uma entrada específica do crontab baseada no número da linha listada.
+# Parâmetros:
+#   $1: Número da linha a ser removida (conforme listado pelo comando crontab -l)
+# Retorno:
+#   0: Sucesso
+#   1: Falha (nenhum cron configurado ou linha inválida)
+# Exemplo de uso:
+#   remove_cron_job 2  # Remove a segunda linha do crontab
+remove_cron_job() {
+    local LINE_NUMBER="$1"
+
+    # Verificar se o número da linha é válido
+    if [[ ! "$LINE_NUMBER" =~ ^[0-9]+$ ]]; then
+        echo "❌ Número da linha inválido: $LINE_NUMBER"
+        return 1
+    fi
+
+    # Obter crontab atual
+    local CRONS=$(crontab -l 2>/dev/null)
+    if [[ -z "$CRONS" ]]; then
+        echo "Nenhum cron configurado."
+        return 1
+    fi
+
+    # Contar o número total de linhas
+    local TOTAL_LINES=$(echo "$CRONS" | wc -l)
+    if [[ "$LINE_NUMBER" -lt 1 || "$LINE_NUMBER" -gt "$TOTAL_LINES" ]]; then
+        echo "❌ Número da linha fora do intervalo: $LINE_NUMBER (total: $TOTAL_LINES)"
+        return 1
+    fi
+
+    # Remover a linha especificada usando sed
+    local NEW_CRONS=$(echo "$CRONS" | sed "${LINE_NUMBER}d")
+
+    # Atualizar crontab com as linhas restantes
+    echo "$NEW_CRONS" | crontab -
+
+    echo "✅ Entrada removida com sucesso!"
+    return 0
+}
+
 # Verificar se argumentos foram passados para modo não-interativo
 if [[ $# -gt 0 ]]; then
     ACTION=""
@@ -212,9 +254,7 @@ while true; do
             echo "======================="
             read -rp "Informe o número da linha a remover: " LINHA
 
-            NEW_CRONS=$(echo "$CRONS" | sed "${LINHA}d")
-            echo "$NEW_CRONS" | crontab -
-            echo "✅ Entrada removida!"
+            remove_cron_job "$LINHA"
             read -n1 -r -p "Pressione qualquer tecla para continuar..."
             ;;
         4)
