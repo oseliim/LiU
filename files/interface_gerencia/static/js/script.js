@@ -315,15 +315,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const turnOnNetBtn = document.getElementById('btn-ligar-internet');
     const turnOffNetBtn = document.getElementById('btn-desligar-internet');
 
-    let outputDiv;
+    let outputDiv = document.querySelector('.script-output');
     if (turnOnBtn || turnOffBtn) {
-        outputDiv = document.createElement('div');
-        outputDiv.className = 'script-output';
-        const commandBox = document.querySelector('.box.mt-4');
+        const commandBox = document.querySelector('.box.mt-4')[1];
         if (commandBox) {
             commandBox.parentNode.insertBefore(outputDiv, commandBox.nextSibling);
-        } else {
-            document.querySelector('.main-content').appendChild(outputDiv);
         }
     }
     
