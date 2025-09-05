@@ -83,7 +83,7 @@ check_and_extract_windows() {
         echo "❌ Arquivo $TARBALL não encontrado no home do usuário!"
         echo "📥 Baixando arquivo do servidor para $USER_HOME..."
         
-        if wget -P "$USER_HOME" http://10.100.64.34/downloads/windows10.tgz; then
+        if wget -P "$USER_HOME" http://200.129.176.42/files/windows10.tgz; then
             echo "✅ Download concluído com sucesso"
         else
             echo "❌ Erro: Falha no download do arquivo"

@@ -40,8 +40,8 @@ elif [[ -f "$FILE_PATH_ROOT" ]]; then
     send_progress "step2_progress" "100%"
     mv "$FILE_PATH_ROOT" /liu_expresso.tgz
 else
-    #wget -P "$HOME_PATH" 'http://200.129.176.42/files/liu_expresso.tgz' 2>&1 | while read -r line; do
-     wget -P "$HOME_PATH" 'http://10.100.74.251/files/liu_expresso.tgz' 2>&1 | while read -r line; do
+    wget -P "$HOME_PATH" 'http://200.129.176.42/files/liu_expresso.tgz' 2>&1 | while read -r line; do
+    #wget -P "$HOME_PATH" 'http://10.100.74.251/files/liu_expresso.tgz' 2>&1 | while read -r line; do
 
         if [[ $line =~ ([0-9]+)% ]]; then
             percent="${BASH_REMATCH[1]}"
