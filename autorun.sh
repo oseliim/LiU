@@ -6,9 +6,6 @@ VENV_PATH="$DIR/.venv"
 PYTHON_VENV="$VENV_PATH/bin/python"
 PIP_VENV="$VENV_PATH/bin/pip"
 
-rm -r "$VENV_PATH"
-apt install -y ipcalc
-
 # Verifica se um comando existe
 command_exists() {
     command -v "$1" &> /dev/null
@@ -16,38 +13,16 @@ command_exists() {
 
 # Instala pacotes do sistema se necessário (roda apenas como root)
 install_system_deps() {
-    if ! command_exists python3; then
-        echo "[INFO] Python3 não encontrado. Instalando..."
-        apt update && apt install -y python3
-    else
-        echo "[INFO] Python3 já está instalado."
-    fi
-
-    if ! command_exists pip3; then
-        echo "[INFO] pip3 não encontrado. Instalando..."
-        apt install -y python3-pip
-    else
-        echo "[INFO] pip3 já está instalado."
-    fi
-
-    if ! python3 -c "import venv" &>/dev/null; then
-        echo "[INFO] python3-venv não encontrado. Instalando..."
-        apt install -y python3-venv
-    else
-        echo "[INFO] python3-venv já está instalado."
-    fi
-        apt install -y python3.12-venv
+    echo "[INFO] Instalando dependências de sistema..."
+    apt update
+    apt install -y python3 python3-pip python3-venv ipcalc firefox
 }
 
-# Cria e inicializa o ambiente virtual, se necessário
+# Cria e inicializa o ambiente virtual
 create_or_activate_venv() {
-    if [ ! -d "$VENV_PATH" ]; then
-        echo "[INFO] Criando ambiente virtual Python em $VENV_PATH ..."
-        python3 -m venv "$VENV_PATH"
-        sudo chmod -R 755 "$VENV_PATH"
-    else
-        echo "[INFO] Ambiente virtual Python já existe em $VENV_PATH."
-    fi
+    rm -rf "$VENV_PATH"   # sempre recria
+    echo "[INFO] Criando ambiente virtual Python em $VENV_PATH ..."
+    python3 -m venv "$VENV_PATH"
 
     # Garante que o pip exista dentro do venv
     if [ ! -x "$PIP_VENV" ]; then
@@ -59,16 +34,15 @@ create_or_activate_venv() {
     "$PYTHON_VENV" -m pip install --upgrade pip setuptools wheel
 }
 
-# Instala o Flask no venv se necessário
+# Instala o Flask no venv
 install_flask_in_venv_if_needed() {
     echo "[INFO] Verificando Flask dentro do venv..."
     if ! "$PYTHON_VENV" -c "import flask" &>/dev/null; then
         echo "[INFO] Flask não encontrado no venv. Instalando..."
-        "$PIP_VENV" install flask
-        if [ $? -ne 0 ]; then
+        "$PIP_VENV" install flask || {
             echo "[ERRO] Falha ao instalar o Flask no venv. Abortando."
             exit 1
-        fi
+        }
     else
         echo "[INFO] Flask já está instalado no venv."
     fi
@@ -83,10 +57,10 @@ port_in_use() {
     fi
 }
 
-# Bloco de execução - root: instala dependências, depois relança como usuário comum
+# Bloco de execução - root instala dependências, depois relança como usuário comum
 if [ "$EUID" -eq 0 ] && [ "$1" != "--as-user" ]; then
     install_system_deps
-    # Relança script como usuário comum para o resto
+    chown -R "$SUDO_USER":"$SUDO_USER" "$DIR"
     if [[ -n "$SUDO_USER" ]]; then
         sudo -u "$SUDO_USER" bash "$0" --as-user
     else
@@ -96,7 +70,7 @@ if [ "$EUID" -eq 0 ] && [ "$1" != "--as-user" ]; then
     exit 0
 fi
 
-# Resto: executa como usuário comum
+# --- Executa como usuário comum daqui para frente ---
 create_or_activate_venv
 install_flask_in_venv_if_needed
 
@@ -104,26 +78,19 @@ if port_in_use; then
     echo "[INFO] Porta 5001 já está em uso. Não iniciaremos o Flask."
 else
     echo "[INFO] Iniciando aplicação Flask dentro do ambiente virtual..."
-    #pkexec "$PYTHON_VENV" "$DIR/$APP_PATH" &
-    sudo "$PYTHON_VENV" "$DIR/$APP_PATH" &
-
+    "$PYTHON_VENV" "$DIR/$APP_PATH" &
 fi
 
-# Define a variável com o caminho da área de trabalho, usuário comum
+# Caminhos para atalhos
 USER_HOME="$HOME"
-DESKTOP_PATH=""
 APPLICATIONS_PATH="$USER_HOME/.local/share/applications"
-if [ -d "$USER_HOME/Desktop" ]; then
-    DESKTOP_PATH="$USER_HOME/Desktop"
-elif [ -d "$USER_HOME/Área de Trabalho" ]; then
-    DESKTOP_PATH="$USER_HOME/Área de Trabalho"
-fi
-if [ -z "$DESKTOP_PATH" ]; then
-    echo "[WARN] Não foi possível encontrar o diretório 'Desktop' ou 'Área de Trabalho'. Usando diretório atual como fallback."
-    DESKTOP_PATH="$DIR"
-fi
+DESKTOP_PATH="$USER_HOME/Desktop"
+[ -d "$USER_HOME/Área de Trabalho" ] && DESKTOP_PATH="$USER_HOME/Área de Trabalho"
+[ -d "$DESKTOP_PATH" ] || DESKTOP_PATH="$DIR"
 
-# Cria o arquivo .desktop no caminho correto do menu de aplicativos DO usuário
+# Criação de atalhos
+mkdir -p "$APPLICATIONS_PATH"
+
 cat > "$APPLICATIONS_PATH/Gerencia.desktop" << EOF
 [Desktop Entry]
 Version=1.0
@@ -133,10 +100,8 @@ Comment=Atalho para abrir a Gerencia
 Exec=$DIR/files/open_gerencia.sh
 Icon=$DIR/files/LIFTO_ICON_NEW.png
 Terminal=false
-
 EOF
 
-# Cria o arquivo .desktop no caminho correto do menu de aplicativos DO usuário
 cat > "$APPLICATIONS_PATH/Instalador.desktop" << EOF
 [Desktop Entry]
 Version=1.0
@@ -150,21 +115,14 @@ EOF
 
 chmod +x "$DIR/files/open_gerencia.sh"
 chmod +x "$DIR/files/open_instalador.sh"
-
 chmod +x "$APPLICATIONS_PATH/Gerencia.desktop"
-
 chmod +x "$APPLICATIONS_PATH/Instalador.desktop"
 
-echo "Os atalhos foram criados com sucesso em: $APPLICATIONS_PATH"
+echo "[INFO] Atalhos criados em: $APPLICATIONS_PATH"
 
+# Cria service
 chmod +x "$DIR/files/create_service.sh"
-#pkexec "$DIR/files/create_service.sh"
 sudo "$DIR/files/create_service.sh"
 
-# Abre o navegador
-apt install firefox -y
-#google-chrome "http://127.0.0.1:5001" &
-firefox --new-tab "http://127.0.0.1:5001" 
-sleep 2
-
-wait
+# Abre o navegador no Flask
+firefox --new-tab "http://127.0.0.1:5001" &
