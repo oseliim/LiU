@@ -78,8 +78,10 @@ if port_in_use; then
     echo "[INFO] Porta 5001 já está em uso. Não iniciaremos o Flask."
 else
     echo "[INFO] Iniciando aplicação Flask dentro do ambiente virtual..."
-    "$PYTHON_VENV" "$DIR/$APP_PATH" &
+    sudo "$PYTHON_VENV" "$DIR/$APP_PATH" &
 fi
+# Executa o script de run.sh para abrir o Flask do instalador
+./files/app_flask/src/run.sh
 
 # Caminhos para atalhos
 USER_HOME="$HOME"
