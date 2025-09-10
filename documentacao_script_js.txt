@@ -1,0 +1,225 @@
+DOCUMENTAÇÃO DO ARQUIVO script.js
+=====================================
+
+Este arquivo JavaScript implementa uma interface de gerenciamento de laboratório de computadores,
+permitindo monitoramento em tempo real, controle de máquinas e agendamento de tarefas.
+
+=====================================
+1. INICIALIZAÇÃO E VARIÁVEIS GLOBAIS
+=====================================
+
+- monitoringInterval: Armazena o ID do intervalo de monitoramento ativo
+- charts: Objeto que armazena todas as instâncias de gráficos Chart.js
+- activeView: Controla qual vista está ativa ('server' ou 'client')
+- activeClientIp: Armazena o IP do cliente atualmente selecionado
+
+=====================================
+2. ELEMENTOS DA INTERFACE
+=====================================
+
+- ipRangeForm: Formulário para configurar faixa de IPs
+- monitoringWrapper: Container principal do monitoramento
+- startButton/stopButton: Botões de controle do monitoramento
+- serverInfoBox/clientMenuBox: Containers das diferentes vistas
+
+=====================================
+3. FUNÇÕES DE BUSCA DE DADOS
+=====================================
+
+fetchData(endpoint, body):
+- Função genérica para fazer requisições POST ao backend
+- Retorna dados JSON ou null em caso de erro
+- Usada por todas as outras funções de atualização
+
+updateCpuInfo():
+- Busca informações de CPU (processador, cores, threads, uso, frequência)
+- Atualiza elementos da interface com prefixo baseado na vista ativa
+- Atualiza gráfico de uso da CPU
+
+updateMemoryInfo():
+- Busca informações de memória (total, usada, disponível, percentual)
+- Atualiza interface e gráfico de memória
+- Suporta tanto vista do servidor quanto do cliente
+
+updateDiskInfo():
+- Busca informações de discos/partições
+- Cria dinamicamente elementos HTML para cada partição
+- Mostra barras de progresso para uso de disco
+
+updateNetworkInfo():
+- Busca informações de rede (upload/download)
+- Atualiza gráfico duplo com dados de upload e download
+- Suporta monitoramento de servidor e cliente
+
+=====================================
+4. SISTEMA DE MONITORAMENTO
+=====================================
+
+updateFunctions:
+- Mapeia métricas para suas respectivas funções de atualização
+- Permite monitoramento tanto do servidor quanto de clientes individuais
+
+startMonitoring(metric):
+- Inicia o monitoramento de uma métrica específica
+- Limpa intervalos anteriores e define novo intervalo de 2.5 segundos
+- Chama a função de atualização correspondente
+
+=====================================
+5. SISTEMA DE GRÁFICOS (Chart.js)
+=====================================
+
+initCharts(prefix):
+- Inicializa gráficos Chart.js para CPU, memória e rede
+- Cria configurações padrão com 60 pontos de dados
+- Suporta prefixos para gráficos de servidor e cliente
+- Configura cores, escalas e animações
+
+updateChart(chart, newValue):
+- Atualiza gráfico simples (CPU, memória)
+- Adiciona novo valor e remove o mais antigo
+- Mantém histórico de 60 pontos
+
+updateDualChart(chart, uploadValue, downloadValue):
+- Atualiza gráfico duplo (rede)
+- Gerencia duas séries de dados simultaneamente
+- Usado para mostrar upload e download
+
+=====================================
+6. CONFIGURAÇÃO DE FAIXA DE IP
+=====================================
+
+handleIpRangeSubmit(event):
+- Processa submissão do formulário de faixa de IP
+- Valida formato da faixa (IP_INICIAL - IP_FINAL)
+- Envia configuração para o backend via /setup-range
+- Chama generateMachineButtons() para criar interface
+
+generateMachineButtons(range):
+- Cria botões dinâmicos para cada IP na faixa
+- Calcula prefixo da rede e octetos inicial/final
+- Gera botões com ícones e labels (PC-1, PC-2, etc.)
+- Adiciona event listeners para seleção de clientes
+
+=====================================
+7. NAVEGAÇÃO ENTRE VISTAS
+=====================================
+
+showClientMenu(event):
+- Alterna para vista de cliente específico
+- Define activeView como 'client' e activeClientIp
+- Anima transição entre serverInfoBox e clientMenuBox
+- Inicializa gráficos específicos do cliente
+- Atualiza título do menu com informações do PC
+
+showServerInfo():
+- Retorna para vista do servidor
+- Limpa seleção de cliente e para monitoramento
+- Anima transição de volta para serverInfoBox
+- Reativa monitoramento do servidor se havia um ativo
+
+=====================================
+8. EXECUÇÃO DE COMANDOS
+=====================================
+
+executeScript(endpoint, body):
+- Executa scripts no backend via streaming
+- Mostra saída em tempo real no outputDiv
+- Usa ReadableStream para processar resposta
+- Suporta comandos com e sem parâmetros
+
+Event Listeners para botões:
+- turnOnBtn: Liga todas as máquinas (/turn_on)
+- turnOffBtn: Desliga todas as máquinas (/turn_off)
+- turnOffOneBtn: Desliga máquina específica (/turn_off_one)
+- turnOnNetBtn/turnOffNetBtn: Controla internet (/turn_on_internet, /turn_off_internet)
+
+=====================================
+9. FORMULÁRIOS DE COMANDO
+=====================================
+
+commandForm (Comando Geral):
+- Executa comandos em todas as máquinas
+- Envia para endpoint /execute
+- Mostra saída em tempo real
+
+commandForm-individual (Comando Individual):
+- Executa comandos em máquina específica
+- Usa activeClientIp para identificar alvo
+- Envia para endpoint /execute_one
+
+=====================================
+10. MONITORAMENTO DE STATUS DAS MÁQUINAS
+=====================================
+
+startMachineMonitoring():
+- Inicia monitoramento via Server-Sent Events (SSE)
+- Conecta ao endpoint /start-monitoring
+- Recebe atualizações de status (ON/OFF) em tempo real
+- Atualiza classes CSS dos botões de máquina
+- Gerencia estados: status-unknown, status-on, status-off
+
+=====================================
+11. SISTEMA DE AGENDAMENTO (CRON)
+=====================================
+
+Configuração de Frequência:
+- daily: Diário em horário específico
+- weekly: Semanal em dia e horário específicos
+- monthly: Mensal em dia e horário específicos
+
+handleScheduleSubmit():
+- Valida dados do formulário de agendamento
+- Constrói expressão cron baseada na frequência
+- Envia para endpoint /schedule_lab_action
+- Gerencia feedback visual e limpeza do formulário
+
+=====================================
+12. VISUALIZAÇÃO DE AGENDAMENTOS
+=====================================
+
+loadSchedules():
+- Carrega lista de jobs cron ativos
+- Busca dados via /list_cron_jobs
+- Interpreta comandos e cria descrições legíveis
+- Gera interface com botões de remoção
+
+removeCronJob(command):
+- Remove agendamento específico
+- Envia comando para /remove_cron_job
+- Atualiza lista após remoção bem-sucedida
+
+=====================================
+13. EVENT LISTENERS E INTERAÇÕES
+=====================================
+
+Métricas do Servidor:
+- Adiciona listeners aos ícones de métricas
+- Gerencia estados ativos/inativos
+- Inicia monitoramento ao clicar em métrica
+
+Navegação:
+- Botão "Voltar" para retornar à vista do servidor
+- Transições suaves entre diferentes seções
+
+=====================================
+14. INICIALIZAÇÃO
+=====================================
+
+DOMContentLoaded:
+- Aguarda carregamento completo do DOM
+- Inicializa gráficos do servidor
+- Configura todos os event listeners
+- Prepara interface para uso
+
+=====================================
+OBSERVAÇÕES TÉCNICAS:
+=====================================
+
+- Usa Chart.js para visualizações em tempo real
+- Implementa Server-Sent Events para monitoramento
+- Suporta streaming de comandos para feedback imediato
+- Gerencia estados complexos com variáveis globais
+- Usa animações CSS para transições suaves
+- Implementa validação de formulários no frontend
+- Suporta tanto operações em lote quanto individuais
+

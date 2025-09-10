@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemplo - Templates com SRI Implementado</title>
+    
+    <!-- ANTES: Sem SRI -->
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+    
+    <!-- DEPOIS: Com SRI -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
+          rel="stylesheet" 
+          integrity="sha384-EXAMPLED_HASH_HERE" 
+          crossorigin="anonymous">
+    
+    <!-- Bootstrap Icons com SRI -->
+    <link rel="stylesheet" 
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" 
+          integrity="sha384-EXAMPLED_HASH_HERE" 
+          crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Exemplo de Implementação SRI</h1>
+        <p>Este arquivo demonstra como os templates ficarão após a implementação de SRI.</p>
+        
+        <div class="alert alert-info">
+            <h4>🔐 SRI Implementado</h4>
+            <p>Todos os recursos CDN agora incluem:</p>
+            <ul>
+                <li><code>integrity="sha384-HASH_AQUI"</code></li>
+                <li><code>crossorigin="anonymous"</code></li>
+            </ul>
+        </div>
+        
+        <div class="alert alert-warning">
+            <h4>⚠️ Importante</h4>
+            <p>Os hashes mostrados são exemplos. Execute os scripts para gerar os hashes reais:</p>
+            <ol>
+                <li><code>./generate-sri.sh</code> - Gera hashes SRI</li>
+                <li><code>./apply-sri.sh</code> - Aplica nos templates</li>
+                <li><code>./validate-sri.sh</code> - Valida implementação</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- ANTES: Sem SRI -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+    
+    <!-- DEPOIS: Com SRI -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" 
+            integrity="sha384-EXAMPLED_HASH_HERE" 
+            crossorigin="anonymous"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" 
+            integrity="sha384-EXAMPLED_HASH_HERE" 
+            crossorigin="anonymous"></script>
+    
+    <!-- Scripts locais (sem SRI necessário) -->
+    <script type="module" src="../static/js/script.modular.js"></script>
+    <script src="../static/js/dark_mode.js"></script>
+</body>
+</html>
