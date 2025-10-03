@@ -32,7 +32,9 @@
 
 ## 📦 Installation
 
-> **Prerequisites:** Ubuntu Server 22.04 or higher with root access.
+> **Prerequisites:** Ubuntu 22.04 or higher with root access.
+>                    Keep all the client machines ON during installation (Some features need to scan these machines).
+>                     
 
 ```bash
 # Clone the repository
@@ -45,6 +47,9 @@ cd LiU
 chmod +x autorun.sh
 sudo ./autorun.sh
 ```
+> **Pos-Installation:** For better performance, keep all the client machines ON, just turn off when extremely necessary.
+>                       For bettter performance, turn the client machines ON hours before a class.
+>                       
 
 ---
 
