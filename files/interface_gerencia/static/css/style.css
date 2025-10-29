@@ -39,6 +39,15 @@
     }
 }
 
+.logout-btn {
+    transition: .3s ease;
+}
+
+.logout-btn:hover, .logout-btn:hover svg{
+    color: var(--color1);
+    fill: var(--color1);
+}
+
 /* Classes personalizadas para cores de fundo */
 .bg-custom-light {
     background-color: var(--color5);

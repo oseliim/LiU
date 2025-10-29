@@ -51,6 +51,20 @@ install_flask_if_needed() {
     fi
 }
 
+install_flask_login_if_needed() {
+    echo "[INFO] Verificando Flask Login..."
+    if ! $PYTHON_VENV -c "import flask_login" &> /dev/null; then
+        echo "[INFO] Flask Login não encontrado. Instalando..."
+        sudo $PIP_VENV install flask_login
+        if [ $? -ne 0 ]; then
+            echo "[ERRO] Falha ao instalar o Flask Login. Abortando."
+            exit 1
+        fi
+    else
+        echo "[INFO] Flask Login já está instalado."
+    fi
+}
+
 # Instala o cpuinfo se necessário
 install_cpuinfo_if_needed() {
     echo "[INFO] Verificando cpuinfo..."

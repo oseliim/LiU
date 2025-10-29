@@ -1,10 +1,69 @@
-from flask import Flask, render_template, jsonify, request, send_from_directory
+from flask import Flask, render_template, jsonify, request, send_from_directory, redirect, url_for, flash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import check_password_hash, generate_password_hash
 import subprocess
 import threading
 import time
 import os
+import sys
+import logging
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
+
+# CONFIGURAÇÃO DE AUTENTICAÇÃO
+app.secret_key = 'change-this-secret-key-for-main-app-xyz789'  # MUDE ISSO!
+
+# Setup Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Por favor, faça login para acessar esta página.'
+
+# Credenciais estáticas - MUDE ESTAS CREDENCIAIS!
+USERNAME = 'admin'
+PASSWORD_HASH = generate_password_hash('admin123')  # Mude 'admin123' para sua senha
+
+# Classe de usuário
+class User(UserMixin):
+    def __init__(self, id):
+        self.id = id
+
+@login_manager.user_loader
+def load_user(user_id):
+    if user_id == USERNAME:
+        return User(user_id)
+    return None
+
+# ROTA DE LOGIN
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username == USERNAME and check_password_hash(PASSWORD_HASH, password):
+            user = User(username)
+            login_user(user)
+            flash('Login realizado com sucesso!', 'success')
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('index'))
+        else:
+            flash('Credenciais inválidas. Tente novamente.', 'error')
+    
+    return render_template('login.html')
+
+# ROTA DE LOGOUT
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Você foi desconectado com sucesso.', 'success')
+    return redirect(url_for('login'))
+
+
 @app.route('/static/js/<path:filename>')
 def serve_js(filename):
     return send_from_directory(app.static_folder + '/js', filename)
@@ -17,6 +76,23 @@ expresso_progress = {
     'step4': '',
     'finished': False
 }
+
+import mac_scanner
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+BASE_PROJECT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+NETWORK_DATA_FILE = os.path.join(BASE_PROJECT_DIR, "tmp", "network_data.txt")
+DNSMASQ_CONF_SCRIPT = os.path.join(BASE_PROJECT_DIR, "dnsmasq_conf.sh")
+USER_CONF_SCRIPT = os.path.join(BASE_PROJECT_DIR, "user_conf.sh")
+GERA_XFCE_SCRIPT = os.path.join(BASE_PROJECT_DIR, "gera_xfce.sh")
+GERA_GDM_SCRIPT = os.path.join(BASE_PROJECT_DIR, "gera_gdm.sh")
+AUTO_INSTALL_SCRIPT = os.path.join(BASE_PROJECT_DIR, "auto_install.sh")
+EXPRESSO_SCRIPT = os.path.join(BASE_PROJECT_DIR, "expresso.sh")
+NETWORK_SCRIPT = os.path.join(BASE_PROJECT_DIR, "network.sh")
+MONTAR_CONF_SCRIPT = os.path.join(BASE_PROJECT_DIR, "montar_conf.sh")
+IPXE_MENU = os.path.join(BASE_PROJECT_DIR, "ipxe_menu.sh")
+MAC_FILE = os.path.join(BASE_PROJECT_DIR, "interface_gerencia", "scripts", "mac_maquinas")
 
 def run_expresso_install():
     global expresso_progress
@@ -79,10 +155,12 @@ def run_expresso_install():
         expresso_progress['step1'] = f'Erro: {str(e)}'
 
 @app.route('/expresso')
+@login_required  # Protegido com login
 def expresso_page():
     return render_template('expresso.html')
 
 @app.route('/expresso/start', methods=['POST'])
+@login_required  # Protegido com login
 def expresso_start():
     global expresso_progress
     expresso_progress = {
@@ -97,37 +175,17 @@ def expresso_start():
     return '', 202
 
 @app.route('/expresso/progress')
+@login_required  # Protegido com login
 def expresso_progress_api():
     return jsonify(expresso_progress)
-import sys
-import os
-import subprocess
-from flask import Flask, render_template, jsonify, request, Response
-
-import mac_scanner
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
-## Removido: app = Flask(__name__, template_folder='templates', static_folder='static') duplicado
-
-BASE_PROJECT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-NETWORK_DATA_FILE = os.path.join(BASE_PROJECT_DIR, "tmp", "network_data.txt")
-DNSMASQ_CONF_SCRIPT = os.path.join(BASE_PROJECT_DIR, "dnsmasq_conf.sh")
-USER_CONF_SCRIPT = os.path.join(BASE_PROJECT_DIR, "user_conf.sh")
-GERA_XFCE_SCRIPT = os.path.join(BASE_PROJECT_DIR, "gera_xfce.sh")
-GERA_GDM_SCRIPT = os.path.join(BASE_PROJECT_DIR, "gera_gdm.sh")
-AUTO_INSTALL_SCRIPT = os.path.join(BASE_PROJECT_DIR, "auto_install.sh")
-EXPRESSO_SCRIPT = os.path.join(BASE_PROJECT_DIR, "expresso.sh")
-NETWORK_SCRIPT = os.path.join(BASE_PROJECT_DIR, "network.sh")
-MONTAR_CONF_SCRIPT = os.path.join(BASE_PROJECT_DIR, "montar_conf.sh")
-IPXE_MENU = os.path.join(BASE_PROJECT_DIR, "ipxe_menu.sh")
-MAC_FILE = os.path.join(BASE_PROJECT_DIR, "interface_gerencia", "scripts", "mac_maquinas")
 
 @app.route('/')
+@login_required  # Protegido com login
 def index():
     return render_template('index.html')
 
 @app.route('/wizard')
+@login_required  # Protegido com login
 def wizard():
     return render_template('wizard.html')
 
@@ -253,6 +311,7 @@ def update_network_data_file(network_config):
         return False
 
 @app.route('/get_parsed_network_data', methods=['GET'])
+@login_required  # Protegido com login
 def get_parsed_network_data():
     app.logger.info(f"Tentando ler o arquivo de dados de rede em: {NETWORK_DATA_FILE}")
     if not os.path.exists(NETWORK_DATA_FILE):
@@ -270,16 +329,10 @@ def get_parsed_network_data():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/run_montar_conf', methods=['POST'])
+@login_required  # Protegido com login
 def run_montar_conf():
     """
     Executa o script montar_conf.sh com os usuários fornecidos
-    Espera um JSON:
-    {
-        "users": [
-            {"username": "user1", "password": "pass1"},
-            {"username": "user2", "password": "pass2"}
-        ]
-    }
     """
     data = request.get_json()
     users = data.get('users', [])
@@ -297,24 +350,30 @@ def run_montar_conf():
     command = ["sudo", "bash", MONTAR_CONF_SCRIPT] + usernames
     
     app.logger.info(f"Executando configuração LTSP para usuários: {usernames}")
+    from flask import Response
     return Response(stream_script_output(command, success_message="Configuração LTSP para usuários concluída com sucesso!"), mimetype='text/html')
 
 @app.route('/run_auto_install', methods=['POST'])
+@login_required  # Protegido com login
 def run_auto_install():
+    from flask import Response
     if not os.path.exists(AUTO_INSTALL_SCRIPT):
         return Response(f"<p style='color:red;'>Erro: Script auto_install.sh não encontrado em {AUTO_INSTALL_SCRIPT}</p>", mimetype='text/html', status=404)
     command = ["sudo", "bash", AUTO_INSTALL_SCRIPT]
-    return Response(stream_script_output(command, success_message="Instalação do LTSP concluída com sucesso!"), mimetype='text/html')
     mac_scanner.run_mac_scanner(MAC_FILE, app.logger)
+    return Response(stream_script_output(command, success_message="Instalação do LTSP concluída com sucesso!"), mimetype='text/html')
 
 @app.route('/run_network_info', methods=['POST'])
+@login_required  # Protegido com login
 def run_network_info():
+    from flask import Response
     if not os.path.exists(NETWORK_SCRIPT):
         return Response(f"<p style='color:red;'>Erro: Script network.sh não encontrado em {NETWORK_SCRIPT}</p>", mimetype='text/html', status=404)
     command = ["bash", NETWORK_SCRIPT]
     return Response(stream_script_output(command, success_message="Coleta de informações de rede concluída."), mimetype='text/html')
 
 @app.route('/save_network_config', methods=['POST'])
+@login_required  # Protegido com login
 def save_network_config():
     """
     Salva as configurações de rede editadas pelo usuário
@@ -340,17 +399,19 @@ def save_network_config():
         return jsonify({"success": True, "message": "Configurações de rede salvas com sucesso"})
     else:
         return jsonify({"error": "Falha ao salvar configurações de rede no arquivo"}), 500
+
 @app.route('/run_all_configurations', methods=['POST'])
+@login_required  # Protegido com login
 def run_all_configurations():
     """
-    Espera um JSON com as configurações de rede, imagem e usuários para executar
-    todas as etapas de configuração do servidor LTSP de forma sequencial.
+    Executa todas as etapas de configuração do servidor LTSP de forma sequencial.
     """
     data = request.get_json()
     app.logger.info(f"Received data for configuration: {data}")
 
     # Validar dados mínimos
     if not data.get('users') or len(data.get('users', [])) == 0:
+        from flask import Response
         return Response("<p style='color:red;'>Erro: Nenhum usuário fornecido.</p>", mimetype='text/html', status=400)
 
     # Extrair configurações
@@ -395,7 +456,7 @@ def run_all_configurations():
     
     image_command = ["sudo", "bash", image_script_path, ubuntu_version]
 
-    # Execução sequencial sem streaming, checando retorno de cada etapa
+    # Execução sequencial
     result = {
         "dnsmasq": None,
         "users": [],
@@ -405,6 +466,7 @@ def run_all_configurations():
         "success": False,
         "error": None
     }
+    
     # 1. DNSMASQ CONFIG
     try:
         app.logger.info(f"Executing dnsmasq config: {' '.join(dnsmasq_command)}")
@@ -443,9 +505,6 @@ def run_all_configurations():
         else:
             user_status["status"] = "fail"
         result["users"].append(user_status)
-
-    # 2.5. MONTAR_CONF
-    # Removido: chamada redundante ao montar_conf.sh, pois user_conf.sh já executa essa configuração.
 
     # 3. IMAGE GENERATION
     try:
@@ -487,10 +546,9 @@ def run_all_configurations():
             return jsonify(result), 500
 
     result["success"] = True
-    # Quando tudo executa, retorna para a tela de execução (front-end pode redirecionar)
     return jsonify(result), 200
+
 if __name__ == '__main__':
-    import logging
     logging.basicConfig(level=logging.INFO)
     app.logger.info(f"BASE_PROJECT_DIR: {BASE_PROJECT_DIR}")
     app.logger.info(f"AUTO_INSTALL_SCRIPT path: {AUTO_INSTALL_SCRIPT}")

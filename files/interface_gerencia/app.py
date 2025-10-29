@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request, Response, jsonify, stream_with_context
+from flask import Flask, render_template, request, Response, jsonify, stream_with_context, redirect, url_for, flash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import check_password_hash, generate_password_hash
 import subprocess
 import os
 import logging
@@ -13,6 +15,59 @@ import get_network_info
 
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
+
+# CONFIGURAÇÃO DE AUTENTICAÇÃO
+app.secret_key = 'LiU@123mudar'  # MUDE ISSO!
+
+# Setup Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Por favor, faça login para acessar esta página.'
+
+# Credenciais estáticas - MUDE ESTAS CREDENCIAIS!
+USERNAME = 'admin'
+PASSWORD_HASH = generate_password_hash('admin123')  # Mude 'admin123' para sua senha
+
+# Classe de usuário
+class User(UserMixin):
+    def __init__(self, id):
+        self.id = id
+
+@login_manager.user_loader
+def load_user(user_id):
+    if user_id == USERNAME:
+        return User(user_id)
+    return None
+
+# ROTA DE LOGIN
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username == USERNAME and check_password_hash(PASSWORD_HASH, password):
+            user = User(username)
+            login_user(user)
+            flash('Login realizado com sucesso!', 'success')
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('index'))
+        else:
+            flash('Credenciais inválidas. Tente novamente.', 'error')
+    
+    return render_template('login.html')
+
+# ROTA DE LOGOUT
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Você foi desconectado com sucesso.', 'success')
+    return redirect(url_for('login'))
 
 try:
     os.system('pip3 install py-cpuinfo')
@@ -38,11 +93,12 @@ last_net_io = psutil.net_io_counters()
 
 
 @app.route('/')
+@login_required  # Protegido com login
 def index():
     return render_template('index.html')
 
-# <-- NOVA ROTA para configurar a faixa de IPs e rodar o scanner -->
 @app.route('/setup-range', methods=['POST'])
+@login_required  # Protegido com login
 def setup_range():
     data = request.get_json()
     if not data or 'range' not in data:
@@ -75,7 +131,6 @@ def setup_range():
 
 
 def stream_script_output(command, success_msg, error_msg):
-    # ... (código existente sem alterações)
     """Função para executar scripts e streamar a saída em tempo real"""
     app.logger.info(f"Executando comando: {' '.join(command)}")
     
@@ -110,7 +165,6 @@ def stream_script_output(command, success_msg, error_msg):
         yield f"<p style='color:red;'>{error_msg} (Código: {process.returncode})</p>"
 
 def run_ping_script():
-    # ... (código existente sem alterações)
     """A generator function that runs the script and yields output line by line."""
     command = ["sudo", "bash", PING_FILE, IP_FILE]
     
@@ -138,13 +192,12 @@ def run_ping_script():
         yield f"data: {error_output.strip()}\n\n"
 
 @app.route('/start-monitoring')
+@login_required  # Protegido com login
 def start_monitoring():
-    # ... (código existente sem alterações)
-    # We return a Response object with the generator and the event-stream mimetype
     return Response(stream_with_context(run_ping_script()), mimetype='text/event-stream')
 
-# ... (Restante das suas rotas /turn_on, /turn_off, etc. permanecem iguais)
 @app.route('/turn_on', methods=['POST'])
+@login_required  # Protegido com login
 def turn_on():
     if not os.path.exists(TURN_ON_SCRIPT):
         return Response("<p style='color:red;'>Erro: Script de inicialização não encontrado!</p>", 
@@ -160,6 +213,7 @@ def turn_on():
     )
 
 @app.route('/turn_off', methods=['POST'])
+@login_required  # Protegido com login
 def turn_off():
     if not os.path.exists(TURN_OFF_SCRIPT):
         return Response("<p style='color:red;'>Erro: Script desligamento não encontrado!</p>", 
@@ -174,22 +228,8 @@ def turn_off():
         mimetype='text/html'
     )
 
-"""@app.route('/turn_on_one', methods=['POST'])
-def turn_on_one():
-    if not os.path.exists(TURN_ON_SCRIPT):
-        return Response("<p style='color:red;'>Erro: Script de inicialização não encontrado!</p>", 
-                    mimetype='text/html', status=404)
-    
-    return Response(
-        stream_script_output(
-            command=["sudo", "bash", TURN_ON_SCRIPT, "mac_maquinas"],
-            success_msg="Laboratório ligado com sucesso!",
-            error_msg="Erro ao ligar laboratório"
-        ),
-        mimetype='text/html'
-    )"""
-
 @app.route('/turn_off_one', methods=['POST'])
+@login_required  # Protegido com login
 def turn_off_one():
     data = request.get_json()
     if not data or 'ip' not in data:
@@ -212,6 +252,7 @@ def turn_off_one():
     )
 
 @app.route('/turn_off_internet', methods=['POST'])
+@login_required  # Protegido com login
 def turn_off_internet():
     if not os.path.exists(TURN_OFF_INTERNET_SCRIPT):
         return Response("<p style='color:red;'>Erro: Script de desligamento da internet não encontrado!</p>", 
@@ -227,6 +268,7 @@ def turn_off_internet():
     )
 
 @app.route('/turn_on_internet', methods=['POST'])
+@login_required  # Protegido com login
 def turn_on_internet():
     if not os.path.exists(TURN_ON_INTERNET_SCRIPT):
         return Response("<p style='color:red;'>Erro: Script de ligação da internet não encontrado!</p>", 
@@ -242,21 +284,17 @@ def turn_on_internet():
     )
 
 @app.route('/execute', methods=['POST'])
+@login_required  # Protegido com login
 def execute_command():
     data = request.get_json()
     if not data or 'executed_command' not in data:
-        # Returning a streaming response even for an error is consistent
         def error_stream():
             yield "<p style='color:red;'>Erro: 'executed_command' não foi fornecido no corpo da requisição.</p>"
         return Response(error_stream(), mimetype='text/html', status=400)
 
-    # Get the specific command the user typed
     user_command = data.get('executed_command')
-
-    # Construct the full command as a list for security and correctness
     command_list = ["sudo", "bash", EX_SCRIPT, user_command, IP_FILE]
     
-    # Use the existing streaming function to send output to the browser
     return Response(
         stream_script_output(
             command=command_list,
@@ -267,6 +305,7 @@ def execute_command():
     )
 
 @app.route('/execute_one', methods=['POST'])
+@login_required  # Protegido com login
 def execute_one():
     data = request.get_json()
     if not data or 'executed_command' not in data or 'ip' not in data:
@@ -288,20 +327,24 @@ def execute_one():
 
 
 @app.route('/cpu-info', methods=['POST'])
+@login_required  # Protegido com login
 def cpu_info():
     interval = 1.0
     return jsonify(get_cpu_info.get_cpu_info(interval))
     
 @app.route('/memory-info', methods=['POST'])
+@login_required  # Protegido com login
 def memory_info():
     return jsonify(get_mem_info.get_memory_info())
 
 
 @app.route('/disk-info', methods=['POST'])
+@login_required  # Protegido com login
 def disk_info():
     return jsonify(get_disk_info.get_disk_info())
 
 @app.route('/network-info', methods=['POST'])
+@login_required  # Protegido com login
 def network_info():
     global last_net_io
     interval = 1.0
@@ -311,6 +354,7 @@ def network_info():
     return jsonify(network_info)
 
 @app.route('/schedule_lab_action', methods=['POST'])
+@login_required  # Protegido com login
 def schedule_lab_action():
     data = request.get_json()
     if not data or 'action' not in data or 'cron_expression' not in data:
@@ -322,13 +366,11 @@ def schedule_lab_action():
     if action not in ['turn_on', 'turn_off']:
         return jsonify({"error": "Ação inválida. Use 'turn_on' ou 'turn_off'."}), 400
 
-    # Caminho do script crontab.sh
     crontab_script = os.path.join(BASE_DIR, "scripts", "crontab.sh")
 
     if not os.path.exists(crontab_script):
         return jsonify({"error": "Script de crontab não encontrado."}), 404
 
-    # Executar o script com os argumentos
     try:
         result = subprocess.run(
             ["sudo", "bash", crontab_script, "--action", action, "--cron", cron_expression],
@@ -347,6 +389,7 @@ def schedule_lab_action():
         return jsonify({"error": f"Erro interno: {str(e)}"}), 500
 
 @app.route('/list_cron_jobs', methods=['GET'])
+@login_required  # Protegido com login
 def list_cron_jobs():
     try:
         result = subprocess.run(
@@ -362,7 +405,6 @@ def list_cron_jobs():
                     parts = line.split()
                     if len(parts) >= 6:
                         command = ' '.join(parts[5:])
-                        # Normalize command path to just script name for easier matching
                         script_name = os.path.basename(command.split()[0])
                         cron_jobs.append({
                             'minute': parts[0],
@@ -381,6 +423,7 @@ def list_cron_jobs():
         return jsonify({"error": f"Erro interno: {str(e)}"}), 500
 
 @app.route('/remove_cron_job', methods=['POST'])
+@login_required  # Protegido com login
 def remove_cron_job():
     data = request.get_json()
     if not data or 'command' not in data:
@@ -391,13 +434,11 @@ def remove_cron_job():
     try:
         app.logger.info(f"Command to remove: {repr(command_to_remove)}")
 
-        # Caminho do script edit_crontab.sh
         edit_script = os.path.join(BASE_DIR, "scripts", "edit_crontab.sh")
 
         if not os.path.exists(edit_script):
             return jsonify({"error": "Script de edição de crontab não encontrado."}), 404
 
-        # Get current crontab to find the line number
         result = subprocess.run(
             ["crontab", "-l"],
             capture_output=True,
@@ -409,25 +450,13 @@ def remove_cron_job():
         cron_lines = result.stdout.strip().split('\n')
         app.logger.info(f"Cron lines: {cron_lines}")
 
-        # Find the line number of the matching command
         def normalize_cmd(s: str) -> str:
-            """Normalize a crontab command string for comparison.
-
-            - remove common redirections (>, >>, 2>&1)
-            - strip surrounding quotes
-            - collapse whitespace
-            """
             if not s:
                 return ''
-            # remove stderr redirection token first (allow spaced variants like '2 > & 1')
             s = re.sub(r"\b2\s*>\s*&\s*1\b", '', s)
-            # remove redirection fragments like >> "file" or >> file or > file
             s = re.sub(r'>+\s*(?:"[^"]*"|\'[^\']*\'|\S+)', '', s)
-            # cleanup any leftover isolated numeric tokens that may have appeared from partial removals
             s = re.sub(r'\b2\b', '', s)
-            # strip quotes around tokens
             s = s.replace('"', '').replace("'", '')
-            # collapse whitespace
             s = re.sub(r'\s+', ' ', s).strip()
             return s
 
@@ -437,13 +466,11 @@ def remove_cron_job():
 
         for i, line in enumerate(cron_lines, 1):
             if line.strip() and not line.lstrip().startswith('#'):
-                # Extract command part (fields 6 and beyond)
                 parts = line.split()
                 if len(parts) >= 6:
                     current_command = ' '.join(parts[5:])
                     normalized_current = normalize_cmd(current_command)
                     app.logger.info(f"Line {i}: extracted command: {repr(current_command)} -> normalized: {repr(normalized_current)}")
-                    # Exact match first, then substring match as fallback
                     if normalized_current == normalized_target or normalized_target in normalized_current:
                         line_number = i
                         app.logger.info(f"Match found at line {i}")
@@ -452,7 +479,6 @@ def remove_cron_job():
         if line_number is None:
             return jsonify({"error": "Agendamento não encontrado."}), 404
 
-        # Execute the edit script with the line number
         result = subprocess.run(
             ["bash", edit_script, "--line", str(line_number)],
             capture_output=True,

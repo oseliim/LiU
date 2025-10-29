@@ -63,6 +63,8 @@ class ImageModule {
      */
     updateStep34NextBtn() {
         const selectedOS = this.elements.osSelector ? this.elements.osSelector.value : 'linux';
+        this.elements.step34NextBtn.disabled = false;
+        /*
         const anyChecked = Array.from(this.elements.optionalApps).some(cb => cb.checked);
         // Se for Linux, só avança se algum app estiver marcado
         if (selectedOS === 'linux') {
@@ -75,6 +77,8 @@ class ImageModule {
             this.elements.optionalAppsError.style.display = 'none';
             this.elements.optionalAppsError.textContent = '';
         }
+        */
+        
     }
 
     /**
@@ -84,6 +88,7 @@ class ImageModule {
         const selectedOS = this.elements.osSelector ? this.elements.osSelector.value : 'linux';
         const selectedApps = this.getSelectedApps();
         // Se for Linux, verificar se marcou algum app
+        /*
         if (selectedOS === 'linux' && selectedApps.length === 0) {
             if (this.elements.optionalAppsError) {
                 this.elements.optionalAppsError.textContent = 'Selecione pelo menos um aplicativo adicional para prosseguir.';
@@ -96,6 +101,7 @@ class ImageModule {
             this.elements.optionalAppsError.style.display = 'none';
             this.elements.optionalAppsError.textContent = '';
         }
+        */
         this.updateFormData(selectedApps);
         // Avançar para o próximo step
         const wizardManager = window.wizardManager;

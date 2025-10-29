@@ -35,6 +35,44 @@ export function attachIpRangeHandler(ipRangeForm, monitoringWrapper) {
             submitButton.textContent = 'Confirmar';
         }
     }
+
+    // Adicione a lógica do botão reset
+    const resetButton = document.getElementById('reset-ip-range');
+    if (resetButton) {
+        resetButton.addEventListener('click', async () => {
+            if (confirm('Tem certeza que deseja resetar a faixa de IP? Isso irá interromper o monitoramento atual.')) {
+                // Limpa o input
+                const input = document.getElementById('ip-range-input');
+                input.value = '';
+                
+                // Reseta o estado do monitoramento
+                monitoringWrapper.classList.add('is-hidden');
+                ipRangeForm.classList.remove('is-hidden');
+                
+                // Limpa os botões de IP
+                const container = document.querySelector('.ip-buttons-container');
+                if (container) {
+                    container.innerHTML = '';
+                }
+
+                // Habilita o botão de submit
+                const submitButton = ipRangeForm.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Confirmar';
+                }
+
+                // Para qualquer monitoramento em andamento
+                if (window.monitoringInterval) {
+                    clearInterval(window.monitoringInterval);
+                    window.monitoringInterval = null;
+                }
+
+                // Notifica o usuário
+                alert('Faixa de IP resetada com sucesso!');
+            }
+        });
+    }
 }
 
 export function generateMachineButtons(range) {

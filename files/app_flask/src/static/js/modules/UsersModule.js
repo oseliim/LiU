@@ -99,7 +99,8 @@ class UsersModule {
         // Preencher os campos com os valores gerados
         console.log('UsersModule: Preenchendo campos com valores gerados...');
         for (let i = 0; i < count; i++) {
-            const username = `${prefix}${i+1}`;
+            // const username = `${prefix}${i+1}`;
+            const username = `${prefix}${String(i + 1).padStart(2, '0')}`;
             const usernameElement = document.getElementById(`username-${i}`);
             const passwordElement = document.getElementById(`password-${i}`);
             

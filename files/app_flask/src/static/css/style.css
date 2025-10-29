@@ -1,3 +1,12 @@
+.logout-btn {
+    transition: .3s ease;
+}
+
+.logout-btn:hover, .logout-btn:hover svg{
+    color: var(--color1);
+    fill: var(--color1);
+}
+
 /* Expresso Instalação Styles */
 .expresso-container {
     max-width: 500px;
@@ -465,12 +474,12 @@ body.dark-mode #summary-content td {
 }
 
 .gredes-logo-corner {
-    top: 5%;
+    top: 10%;
     left: 5%;
 }
 
 .ifto-logo-corner {
-    top: 5%;
+    top: 10%;
     right: 5%;
 }
 
