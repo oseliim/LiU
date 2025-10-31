@@ -141,4 +141,5 @@ chmod +x "$DIR/files/create_service.sh"
 sudo "$DIR/files/create_service.sh"
 
 # Abre o navegador no Flask
-firefox --new-tab "http://127.0.0.1:5001" &
+GUI_USER=$(logname)
+sudo -u "$GUI_USER" xdg-open "http://127.0.0.1:5001" &
