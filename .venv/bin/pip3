@@ -1,4 +1,4 @@
-#!/home/aluno18/Downloads/LiU/.venv/bin/python
+#!/home/liu/LiU/.venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

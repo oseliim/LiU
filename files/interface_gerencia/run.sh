@@ -101,9 +101,9 @@ install_psutil_if_needed() {
 install_python_if_needed
 install_pip_if_needed
 install_flask_if_needed
-install_cpuinfo_if_needed  # <-- Nova função adicionada
-install_psutil_if_needed   # <-- Mais uma
-
+install_cpuinfo_if_needed
+install_psutil_if_needed
+install_flask_login_if_needed
 
 
 # Executa a aplicação dentro do venv

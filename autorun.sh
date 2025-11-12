@@ -87,6 +87,7 @@ fi
 # --- Executa como usuário comum daqui para frente ---
 create_or_activate_venv
 install_flask_in_venv_if_needed
+install_flask_login_in_venv_if_needed
 
 if port_in_use; then
     echo "[INFO] Porta 5001 já está em uso. Não iniciaremos o Flask."

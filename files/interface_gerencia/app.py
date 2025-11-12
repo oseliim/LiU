@@ -17,7 +17,7 @@ app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
 
 # CONFIGURAÇÃO DE AUTENTICAÇÃO
-app.secret_key = 'LiU@123mudar'  # MUDE ISSO!
+app.secret_key = 'LiU@123mudar'
 
 # Setup Flask-Login
 login_manager = LoginManager()
@@ -25,9 +25,9 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Por favor, faça login para acessar esta página.'
 
-# Credenciais estáticas - MUDE ESTAS CREDENCIAIS!
+# Credenciais estáticas
 USERNAME = 'admin'
-PASSWORD_HASH = generate_password_hash('admin123')  # Mude 'admin123' para sua senha
+PASSWORD_HASH = generate_password_hash('admin123')
 
 # Classe de usuário
 class User(UserMixin):
