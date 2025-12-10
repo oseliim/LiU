@@ -1,0 +1,30 @@
+========================================
+INICIO RAPIDO - Sistema LTSP v2.0
+========================================
+
+OPCAO 1: Script Automatico (Recomendado)
+------------------------------------------
+No PowerShell, execute:
+
+  cd files\GERENCIA
+  .\start.bat
+
+OPCAO 2: Manual (Dois Terminais)
+----------------------------------
+
+TERMINAL 1 - Backend:
+  cd files\GERENCIA\backend
+  python -m venv venv
+  venv\Scripts\activate
+  pip install -r requirements.txt
+  python app.py
+
+TERMINAL 2 - Frontend:
+  cd files\GERENCIA\frontend
+  npm install
+  npm run dev
+
+Depois acesse: http://localhost:3000
+
+========================================
+

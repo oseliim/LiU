@@ -1,0 +1,20 @@
+# Dependências essenciais (sem pydantic que precisa de Rust)
+flask==3.0.0
+flask-socketio==5.3.5
+flask-cors==4.0.0
+flask-caching==2.1.0
+python-socketio==5.10.0
+psutil==5.9.6
+py-cpuinfo==9.0.0
+python-dotenv==1.0.0
+werkzeug==3.0.1
+eventlet==0.33.3
+
+# Opcionais (comentados - descomente se necessário)
+# gunicorn==21.2.0
+# redis==5.0.1
+# celery==5.3.4
+# sqlalchemy==2.0.23
+# python-jose[cryptography]==3.3.0
+# passlib[bcrypt]==1.7.4
+
