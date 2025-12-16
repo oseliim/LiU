@@ -16,11 +16,25 @@ fi
 run_backend() {
     echo "Iniciando backend..."
     cd backend
+    
+    # Verificar Python disponível (preferir 3.8+)
+    if command -v python3.8 &> /dev/null; then
+        PYTHON_CMD=python3.8
+    elif command -v python3.9 &> /dev/null; then
+        PYTHON_CMD=python3.9
+    elif command -v python3.10 &> /dev/null; then
+        PYTHON_CMD=python3.10
+    else
+        PYTHON_CMD=python3
+        echo "Aviso: Usando python3 padrão. Flask 3.0 requer Python 3.8+"
+    fi
+    
     if [ ! -d "venv" ]; then
-        echo "Criando ambiente virtual..."
-        python3 -m venv venv
+        echo "Criando ambiente virtual com $PYTHON_CMD..."
+        $PYTHON_CMD -m venv venv
     fi
     source venv/bin/activate
+    pip install -q --upgrade pip
     pip install -q -r requirements.txt
     echo "Backend rodando em http://localhost:5001"
     python app.py

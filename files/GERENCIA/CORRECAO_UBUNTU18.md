@@ -11,7 +11,19 @@ Este documento explica como corrigir os problemas encontrados ao rodar o sistema
 
 ## Solução
 
-### Passo 1: Atualizar Node.js
+### Passo 1: Verificar e Instalar Python 3.8+ (se necessário)
+
+Flask 3.0.0 requer Python 3.8+. Ubuntu 18.04 vem com Python 3.6 por padrão.
+
+```bash
+python3 --version
+# Se mostrar Python 3.6.x, execute:
+cd ~/Documentos/LiU/files/GERENCIA
+chmod +x install_python38_ubuntu18.sh
+sudo ./install_python38_ubuntu18.sh
+```
+
+### Passo 2: Atualizar Node.js
 
 Execute o script de instalação do Node.js:
 
@@ -32,14 +44,31 @@ curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
-### Passo 2: Verificar Instalação
+### Passo 3: Verificar Instalações
 
 ```bash
 node -v  # Deve mostrar v18.x.x ou superior
 npm -v   # Deve mostrar 9.x.x ou superior
 ```
 
-### Passo 3: Reinstalar Dependências do Frontend
+### Passo 4: Configurar Backend com Python 3.8+
+
+```bash
+cd ~/Documentos/LiU/files/GERENCIA/backend
+
+# Criar venv com Python 3.8 (se instalado)
+if command -v python3.8 &> /dev/null; then
+    python3.8 -m venv venv
+else
+    python3 -m venv venv  # Usar Python padrão
+fi
+
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Passo 5: Reinstalar Dependências do Frontend
 
 ```bash
 cd files/GERENCIA/frontend
@@ -47,15 +76,13 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-### Passo 4: Verificar Portas
+### Passo 6: Verificar Portas
 
 O backend está configurado para rodar na **porta 5001**. As seguintes configurações foram atualizadas:
 
 - ✅ `vite.config.js` - proxy atualizado para porta 5001
 - ✅ `useWebSocket.js` - URL atualizada para porta 5001
 - ✅ `run.sh` - mensagem atualizada
-
-### Passo 5: Verificar se a Porta 5001 está Livre
 
 ```bash
 # Verificar se algo está usando a porta 5001
@@ -67,7 +94,7 @@ sudo netstat -tulpn | grep 5001
 # sudo kill -9 <PID>
 ```
 
-### Passo 6: Rodar o Sistema
+### Passo 7: Rodar o Sistema
 
 **Opção A: Script Automático**
 ```bash
@@ -92,7 +119,7 @@ cd files/GERENCIA/frontend
 npm run dev
 ```
 
-### Passo 7: Acessar o Sistema
+### Passo 8: Acessar o Sistema
 
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:5001/api/health

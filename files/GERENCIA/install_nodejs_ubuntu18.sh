@@ -34,9 +34,22 @@ echo "npm instalado: $NPM_VERSION"
 
 # Verificar se a instalação foi bem-sucedida
 if [ "$?" -eq 0 ]; then
-    echo ""
-    echo "✓ Node.js instalado com sucesso!"
-    echo "Agora você pode executar 'npm install' no diretório frontend"
+    # Verificar novamente a versão instalada
+    FINAL_NODE_VERSION=$(node -v 2>/dev/null)
+    FINAL_NPM_VERSION=$(npm -v 2>/dev/null)
+    
+    if [ -n "$FINAL_NODE_VERSION" ]; then
+        echo ""
+        echo "✓ Node.js instalado com sucesso!"
+        echo "  Versão: $FINAL_NODE_VERSION"
+        echo "  npm: $FINAL_NPM_VERSION"
+        echo ""
+        echo "Agora você pode executar 'npm install' no diretório frontend"
+    else
+        echo ""
+        echo "✗ Erro: Node.js não foi instalado corretamente"
+        exit 1
+    fi
 else
     echo ""
     echo "✗ Erro na instalação do Node.js"
