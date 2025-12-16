@@ -22,7 +22,7 @@ run_backend() {
     fi
     source venv/bin/activate
     pip install -q -r requirements.txt
-    echo "Backend rodando em http://localhost:5000"
+    echo "Backend rodando em http://localhost:5001"
     python app.py
 }
 
