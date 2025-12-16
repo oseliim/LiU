@@ -14,8 +14,6 @@ export const useServerMetrics = (interval = 2000) => {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!connected) return
-
     const fetchMetrics = async () => {
       try {
         setLoading(true)
@@ -33,14 +31,14 @@ export const useServerMetrics = (interval = 2000) => {
       }
     }
 
-    // Buscar imediatamente
+    // Buscar imediatamente (não depende do WebSocket)
     fetchMetrics()
 
-    // Configurar intervalo
+    // Configurar intervalo para buscar métricas periodicamente
     const intervalId = setInterval(fetchMetrics, interval)
 
-    // Escutar atualizações via WebSocket
-    if (socket) {
+    // Escutar atualizações via WebSocket (opcional - apenas se conectado)
+    if (socket && connected) {
       socket.emit('subscribe_server_metrics')
       
       socket.on('server_metrics_update', (data) => {
@@ -54,7 +52,7 @@ export const useServerMetrics = (interval = 2000) => {
         socket.off('server_metrics_update')
       }
     }
-  }, [connected, interval, socket])
+  }, [interval, socket, connected])
 
   return { metrics, loading }
 }

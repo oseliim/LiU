@@ -138,20 +138,13 @@ def handle_subscribe_server_metrics():
     print('Cliente inscrito para métricas do servidor')
 
 if __name__ == '__main__':
-    # Em desenvolvimento
-    if async_mode == 'eventlet':
-        socketio.run(
-            app,
-            host='0.0.0.0',
-            port=5001,
-            debug=True,
-            allow_unsafe_werkzeug=True
-        )
-    else:
-        # Usar Flask dev server quando eventlet não está disponível
-        app.run(
-            host='0.0.0.0',
-            port=5001,
-            debug=True
-        )
+    # Sempre usar socketio.run() para suportar WebSocket
+    # Mesmo em modo threading, o SocketIO funciona (com polling como fallback)
+    socketio.run(
+        app,
+        host='0.0.0.0',
+        port=5001,
+        debug=True,
+        allow_unsafe_werkzeug=True
+    )
 
