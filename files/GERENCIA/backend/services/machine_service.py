@@ -5,7 +5,7 @@ import subprocess
 import os
 import threading
 from typing import List, Dict, Optional
-from utils.helpers import get_script_path, parse_ip_range
+from utils.helpers import get_script_path, get_root_script_path, parse_ip_range
 from utils.validators import validate_ip
 
 class MachineService:
@@ -50,21 +50,21 @@ class MachineService:
             'last_seen': self.machines_cache.get(ip, {}).get('last_seen')
         }
     
-    def turn_on_machines(self, ips: Optional[List[str]] = None) -> Dict:
-        """Liga máquinas"""
-        script = get_script_path('liga.sh')
+    def turn_on_machines(self, ips: Optional[List[str]] = None, lab: Optional[str] = None) -> Dict:
+        """Liga máquinas usando liga.sh"""
+        script = get_root_script_path('liga.sh')
         
         if not os.path.exists(script):
             return {'error': 'Script de ligar não encontrado'}
         
-        if ips is None or len(ips) == 0:
-            # Ligar todas usando MAC file
-            command = ['sudo', 'bash', script, self.mac_file]
-        else:
-            # Ligar máquinas específicas (implementar se necessário)
-            command = ['sudo', 'bash', script, self.mac_file]
-        
         try:
+            if lab:
+                # Ligar laboratório específico: liga.sh -l labconf
+                command = ['sudo', 'bash', script, '-l', lab]
+            else:
+                # Ligar todas: liga.sh -a
+                command = ['sudo', 'bash', script, '-a']
+            
             result = subprocess.run(
                 command,
                 capture_output=True,
@@ -73,9 +73,56 @@ class MachineService:
             )
             
             if result.returncode == 0:
-                return {'success': True, 'message': 'Máquinas ligadas com sucesso'}
+                return {'success': True, 'message': 'Máquinas ligadas com sucesso', 'output': result.stdout}
             else:
-                return {'success': False, 'error': result.stderr}
+                return {'success': False, 'error': result.stderr or result.stdout}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+    
+    def get_active_machines(self) -> Dict:
+        """Executa list_users.sh e retorna máquinas ativas"""
+        script = get_root_script_path('list_users.sh')
+        output_file = get_root_script_path('maquinas.txt')
+        
+        if not os.path.exists(script):
+            return {'error': 'Script list_users.sh não encontrado'}
+        
+        try:
+            # Executa o script (ele gera o arquivo maquinas.txt)
+            result = subprocess.run(
+                ['sudo', 'bash', script],
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            
+            machines = []
+            
+            # Lê o arquivo maquinas.txt gerado pelo script
+            if os.path.exists(output_file):
+                with open(output_file, 'r') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and '|' in line:
+                            parts = [p.strip() for p in line.split('|')]
+                            if len(parts) >= 4:
+                                lab = parts[0]
+                                user = parts[1]
+                                ip = parts[2]
+                                mac = parts[3]
+                                
+                                machines.append({
+                                    'lab': lab,
+                                    'user': user,
+                                    'ip': ip,
+                                    'mac': mac
+                                })
+            
+            return {
+                'success': True,
+                'machines': machines,
+                'total': len(machines)
+            }
         except Exception as e:
             return {'success': False, 'error': str(e)}
     

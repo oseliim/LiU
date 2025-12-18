@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Paper,
@@ -9,9 +9,20 @@ import {
   Chip,
   Card,
   CardContent,
+  Avatar,
+  CircularProgress,
+  IconButton,
+  Tooltip,
   useTheme
 } from '@mui/material'
-import { Send as SendIcon, Terminal as TerminalIcon, History as HistoryIcon } from '@mui/icons-material'
+import {
+  Send as SendIcon,
+  Terminal as TerminalIcon,
+  History as HistoryIcon,
+  Computer as ComputerIcon,
+  PowerSettingsNew as PowerIcon,
+  Refresh as RefreshIcon
+} from '@mui/icons-material'
 import { toast } from 'react-toastify'
 import api from '../../services/api'
 import './Commands.css'
@@ -22,9 +33,12 @@ const Commands = () => {
   const [output, setOutput] = useState([])
   const [allowedCommands, setAllowedCommands] = useState([])
   const [loading, setLoading] = useState(false)
+  const [activeMachines, setActiveMachines] = useState([])
+  const [loadingMachines, setLoadingMachines] = useState(false)
+  const [turningOn, setTurningOn] = useState(false)
   const theme = useTheme()
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchAllowedCommands = async () => {
       try {
         const response = await api.get('/commands/allowed')
@@ -36,7 +50,44 @@ const Commands = () => {
       }
     }
     fetchAllowedCommands()
+    fetchActiveMachines()
   }, [])
+
+  const fetchActiveMachines = async () => {
+    setLoadingMachines(true)
+    try {
+      const response = await api.get('/machines/active')
+      if (response.data.status === 'success') {
+        setActiveMachines(response.data.data.machines || [])
+      }
+    } catch (error) {
+      console.error('Erro ao buscar máquinas ativas:', error)
+      toast.error('Erro ao buscar máquinas ativas')
+    } finally {
+      setLoadingMachines(false)
+    }
+  }
+
+  const handleTurnOnMachines = async (lab = null) => {
+    setTurningOn(true)
+    try {
+      const response = await api.post('/machines/turn-on', { lab })
+      if (response.data.status === 'success') {
+        toast.success(lab ? `Máquinas do laboratório ${lab} ligadas com sucesso` : 'Todas as máquinas ligadas com sucesso')
+        // Atualiza a lista após um delay
+        setTimeout(() => {
+          fetchActiveMachines()
+        }, 3000)
+      } else {
+        toast.error(response.data.error || 'Erro ao ligar máquinas')
+      }
+    } catch (error) {
+      toast.error('Erro ao ligar máquinas')
+      console.error(error)
+    } finally {
+      setTurningOn(false)
+    }
+  }
 
   const handleExecute = async () => {
     if (!command.trim()) {
@@ -111,6 +162,117 @@ const Commands = () => {
       </Box>
 
       <Grid container spacing={3}>
+        {/* Seção de Máquinas Ativas */}
+        <Grid item xs={12}>
+          <Paper
+            sx={{
+              p: 3,
+              background: `linear-gradient(135deg, ${theme.palette.background.paper} 0%, ${theme.palette.mode === 'dark' ? '#252525' : '#fafafa'} 100%)`,
+            }}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <ComputerIcon sx={{ fontSize: 32, color: theme.palette.primary.main, mr: 2 }} />
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    Máquinas Ativas
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Estações LTSP conectadas no momento
+                  </Typography>
+                </Box>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Tooltip title="Atualizar lista">
+                  <IconButton onClick={fetchActiveMachines} disabled={loadingMachines}>
+                    <RefreshIcon />
+                  </IconButton>
+                </Tooltip>
+                <Button
+                  variant="contained"
+                  startIcon={<PowerIcon />}
+                  onClick={() => handleTurnOnMachines()}
+                  disabled={turningOn}
+                  color="success"
+                >
+                  {turningOn ? 'Ligando...' : 'Ligar Todas'}
+                </Button>
+              </Box>
+            </Box>
+
+            {loadingMachines ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : activeMachines.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body1" color="text.secondary">
+                  Nenhuma máquina ativa no momento
+                </Typography>
+              </Box>
+            ) : (
+              <Grid container spacing={2}>
+                {activeMachines.map((machine, index) => (
+                  <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+                    <Card
+                      sx={{
+                        background: `linear-gradient(135deg, ${theme.palette.mode === 'dark' ? '#2a2a2a' : '#ffffff'} 0%, ${theme.palette.mode === 'dark' ? '#1f1f1f' : '#f5f5f5'} 100%)`,
+                        border: `1px solid ${theme.palette.divider}`,
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          transform: 'translateY(-4px)',
+                          boxShadow: theme.palette.mode === 'dark' 
+                            ? '0 8px 16px rgba(0, 0, 0, 0.3)' 
+                            : '0 8px 16px rgba(0, 0, 0, 0.1)',
+                        },
+                      }}
+                    >
+                      <CardContent>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                          <Avatar
+                            sx={{
+                              bgcolor: theme.palette.primary.main,
+                              width: 48,
+                              height: 48,
+                              mr: 2,
+                            }}
+                          >
+                            <ComputerIcon />
+                          </Avatar>
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                              {machine.user || 'N/A'}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {machine.lab || 'Sem laboratório'}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Box sx={{ mb: 1 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            <strong>IP:</strong> {machine.ip}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ mb: 2 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            <strong>MAC:</strong> {machine.mac}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          label="Online"
+                          color="success"
+                          size="small"
+                          sx={{ width: '100%' }}
+                        />
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
+          </Paper>
+        </Grid>
+
         <Grid item xs={12} md={8}>
           <Paper
             sx={{
@@ -242,9 +404,28 @@ const Commands = () => {
               <Typography variant="body2" color="text.secondary" paragraph>
                 Apenas comandos da lista de permitidos podem ser executados por segurança.
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" paragraph>
                 Para executar em uma máquina específica, informe o IP no campo acima.
               </Typography>
+              <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+                <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                  Ligar Máquinas
+                </Typography>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  Use o botão "Ligar Todas" para acionar todas as máquinas via Wake-on-LAN.
+                </Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<PowerIcon />}
+                  onClick={() => handleTurnOnMachines()}
+                  disabled={turningOn}
+                  fullWidth
+                  color="success"
+                  sx={{ mt: 1 }}
+                >
+                  {turningOn ? 'Ligando...' : 'Ligar Todas as Máquinas'}
+                </Button>
+              </Box>
             </CardContent>
           </Card>
         </Grid>

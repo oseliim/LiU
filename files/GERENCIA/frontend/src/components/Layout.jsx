@@ -39,6 +39,7 @@ import {
 import { useThemeStore } from '../store/themeStore'
 import { useAuth } from '../contexts/AuthContext'
 import ServerSelector from './Servers/ServerSelector'
+import { toast } from 'react-toastify'
 import './Layout.css'
 
 const menuItems = [
@@ -131,12 +132,29 @@ const Layout = ({ children }) => {
       <List sx={{ flex: 1, pt: 2, px: 1.5 }}>
         {menuItems.map((item) => {
           const isSelected = location.pathname === item.path
+          const isCommands = item.path === '/commands'
+          
+          const handleItemClick = (e) => {
+            if (isMobile) {
+              setMobileOpen(false)
+            }
+            
+            // Intercepta clique em Commands para mostrar mensagem
+            if (isCommands) {
+              e.preventDefault()
+              toast.info('Página sendo concertada', {
+                position: 'top-right',
+                autoClose: 3000,
+              })
+            }
+          }
+          
           return (
             <ListItem
               key={item.text}
-              component={Link}
-              to={item.path}
-              onClick={() => isMobile && setMobileOpen(false)}
+              component={isCommands ? 'div' : Link}
+              to={isCommands ? undefined : item.path}
+              onClick={handleItemClick}
               sx={{
                 mb: 0.5,
                 borderRadius: 2,
@@ -146,6 +164,7 @@ const Layout = ({ children }) => {
                     ? 'rgba(0, 146, 0, 0.15)'
                     : 'rgba(0, 128, 0, 0.1)'
                   : 'transparent',
+                cursor: isCommands ? 'pointer' : 'default',
                 '&:hover': {
                   backgroundColor: isSelected
                     ? theme.palette.mode === 'dark'

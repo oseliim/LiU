@@ -7,10 +7,16 @@ from typing import Dict, Any
 # Caminho base do projeto
 BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 SCRIPTS_DIR = os.path.join(BASE_DIR, '..', 'scripts')
+# Diretório raiz onde ficam os scripts principais (list_users.sh, liga.sh, etc)
+ROOT_DIR = os.path.join(BASE_DIR, '..')
 
 def get_script_path(script_name: str) -> str:
     """Retorna o caminho completo de um script"""
     return os.path.join(SCRIPTS_DIR, script_name)
+
+def get_root_script_path(script_name: str) -> str:
+    """Retorna o caminho completo de um script na raiz do projeto"""
+    return os.path.join(ROOT_DIR, script_name)
 
 def format_bytes(byte_count: int) -> str:
     """Converte bytes para formato legível"""
