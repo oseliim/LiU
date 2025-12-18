@@ -79,53 +79,6 @@ class MachineService:
         except Exception as e:
             return {'success': False, 'error': str(e)}
     
-    def get_active_machines(self) -> Dict:
-        """Executa list_users.sh e retorna máquinas ativas"""
-        script = get_root_script_path('list_users.sh')
-        output_file = get_root_script_path('maquinas.txt')
-        
-        if not os.path.exists(script):
-            return {'error': 'Script list_users.sh não encontrado'}
-        
-        try:
-            # Executa o script (ele gera o arquivo maquinas.txt)
-            result = subprocess.run(
-                ['sudo', 'bash', script],
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
-            
-            machines = []
-            
-            # Lê o arquivo maquinas.txt gerado pelo script
-            if os.path.exists(output_file):
-                with open(output_file, 'r') as f:
-                    for line in f:
-                        line = line.strip()
-                        if line and '|' in line:
-                            parts = [p.strip() for p in line.split('|')]
-                            if len(parts) >= 4:
-                                lab = parts[0]
-                                user = parts[1]
-                                ip = parts[2]
-                                mac = parts[3]
-                                
-                                machines.append({
-                                    'lab': lab,
-                                    'user': user,
-                                    'ip': ip,
-                                    'mac': mac
-                                })
-            
-            return {
-                'success': True,
-                'machines': machines,
-                'total': len(machines)
-            }
-        except Exception as e:
-            return {'success': False, 'error': str(e)}
-    
     def turn_off_machines(self, ips: Optional[List[str]] = None) -> Dict:
         """Desliga máquinas"""
         script = get_script_path('desliga.sh')

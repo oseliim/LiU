@@ -64,11 +64,15 @@ export const AuthProvider = ({ children }) => {
         setActiveServer(null)
       }
     } catch (error) {
-      // 404 é esperado se não houver servidor ativo
+      // 404 é esperado se não houver servidor ativo - não logar como erro
       if (error.response?.status === 404) {
         setActiveServer(null)
-      } else {
+        // Não logar 404 como erro, é comportamento esperado
+      } else if (error.response?.status !== 401 && error.response?.status !== 422) {
+        // Só logar se não for erro de autenticação
         console.error('Erro ao carregar servidor ativo:', error)
+        setActiveServer(null)
+      } else {
         setActiveServer(null)
       }
     }

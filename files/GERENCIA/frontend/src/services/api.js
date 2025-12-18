@@ -37,10 +37,18 @@ api.interceptors.response.use(
         return Promise.reject(error)
       }
 
+      // Não mostrar toast para 404 em /servers/active (é esperado)
+      if (error.response.status === 404 && error.config?.url?.includes('/servers/active')) {
+        return Promise.reject(error)
+      }
+
       const message = error.response.data?.error || error.response.data?.message || 'Erro na requisição'
       toast.error(message)
     } else if (error.request) {
-      toast.error('Erro de conexão com o servidor')
+      // Não mostrar toast para timeout se for requisição de status (pode ser normal)
+      if (!error.config?.url?.includes('/machines/status')) {
+        toast.error('Erro de conexão com o servidor')
+      }
     } else {
       toast.error('Erro ao processar requisição')
     }

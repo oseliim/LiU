@@ -66,19 +66,6 @@ def turn_on_machines():
     
     return jsonify(create_response(data=result))
 
-@machines_bp.route('/active', methods=['GET'])
-def get_active_machines():
-    """Retorna máquinas ativas usando list_users.sh"""
-    try:
-        result = machine_service.get_active_machines()
-        
-        if 'error' in result:
-            return jsonify(create_response(error=result['error'], status=500)), 500
-        
-        return jsonify(create_response(data=result))
-    except Exception as e:
-        return jsonify(create_response(error=str(e), status=500)), 500
-
 @machines_bp.route('/turn-off', methods=['POST'])
 def turn_off_machines():
     """Desliga máquinas"""

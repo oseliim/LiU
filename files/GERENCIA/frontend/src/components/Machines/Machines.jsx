@@ -32,6 +32,16 @@ import MachineCard from './MachineCard'
 import IPRangeDialog from './IPRangeDialog'
 import './Machines.css'
 
+const LABORATORIOS = [
+  { id: 'labconf', name: 'Lab Conf' },
+  { id: 'labdes', name: 'Lab Des' },
+  { id: 'labmatica', name: 'Lab Mática' },
+  { id: 'labmidia', name: 'Lab Mídia' },
+  { id: 'labmob', name: 'Lab Mob' },
+  { id: 'labpo', name: 'Lab PO' },
+  { id: 'labtec', name: 'Lab Tec' }
+]
+
 const Machines = () => {
   const { machines, refreshStatus, connected } = useMachineStatus()
   const { selectedMachines, setSelectedMachines, toggleMachineSelection } = useMachineStore()
@@ -39,6 +49,7 @@ const Machines = () => {
   const [filter, setFilter] = useState('all')
   const [ipRangeDialogOpen, setIPRangeDialogOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [turningOnLab, setTurningOnLab] = useState(null)
   const theme = useTheme()
 
   const filteredMachines = useMemo(() => {
@@ -57,18 +68,38 @@ const Machines = () => {
   const handleTurnOn = async () => {
     setLoading(true)
     try {
-      const ips = selectedMachines.length > 0 ? selectedMachines : []
-      const response = await api.post('/machines/turn-on', { ips })
+      // Ligar todas as máquinas (sem especificar lab)
+      const response = await api.post('/machines/turn-on', {})
       
       if (response.data.status === 'success') {
-        toast.success('Comando de ligar enviado com sucesso')
+        toast.success('Comando de ligar todas as máquinas enviado com sucesso')
         setSelectedMachines([])
-        setTimeout(refreshStatus, 2000)
+        setTimeout(refreshStatus, 3000)
       }
     } catch (error) {
       toast.error('Erro ao ligar máquinas')
+      console.error(error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleTurnOnLab = async (labId) => {
+    setTurningOnLab(labId)
+    try {
+      const response = await api.post('/machines/turn-on', { lab: labId })
+      
+      if (response.data.status === 'success') {
+        const labName = LABORATORIOS.find(l => l.id === labId)?.name || labId
+        toast.success(`Comando de ligar ${labName} enviado com sucesso`)
+        setTimeout(refreshStatus, 3000)
+      }
+    } catch (error) {
+      const labName = LABORATORIOS.find(l => l.id === labId)?.name || labId
+      toast.error(`Erro ao ligar ${labName}`)
+      console.error(error)
+    } finally {
+      setTurningOnLab(null)
     }
   }
 
@@ -292,6 +323,40 @@ const Machines = () => {
             </Box>
           </Grid>
         </Grid>
+
+        {/* Botões de Laboratórios */}
+        <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+          <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600, color: 'text.secondary' }}>
+            Ligar Laboratórios Específicos
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {LABORATORIOS.map((lab) => (
+              <Button
+                key={lab.id}
+                variant="outlined"
+                color="success"
+                size="small"
+                startIcon={<PowerIcon />}
+                onClick={() => handleTurnOnLab(lab.id)}
+                disabled={loading || turningOnLab !== null}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  minWidth: 120,
+                  ...(turningOnLab === lab.id && {
+                    bgcolor: 'success.main',
+                    color: 'white',
+                    '&:hover': {
+                      bgcolor: 'success.dark',
+                    }
+                  })
+                }}
+              >
+                {turningOnLab === lab.id ? 'Ligando...' : lab.name}
+              </Button>
+            ))}
+          </Box>
+        </Box>
 
         {/* Controles de Internet */}
         <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}`, display: 'flex', gap: 1 }}>
