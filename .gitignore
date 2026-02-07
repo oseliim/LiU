@@ -1,0 +1,66 @@
+# Ignore Python virtual environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore Node.js modules
+node_modules/
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore log files
+*.log
+
+# Ignore compiled C binaries
+*.out
+*.exe
+*.dll
+*.so
+
+# Ignore temporary files
+*.tmp
+*.swp
+*.swo
+~*
+
+# Ignore Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore backup files
+*.bak
+*.old
+*.save
+
+# Ignore generated hashes and SRI files
+sri-hashes.json
+sri-hashes.txt
+
+# Ignore shell script outputs
+*.sh.save
+
+# Ignore workspace and editor files
+.vscode/
+.idea/
+
+# Ignore images and binary blobs
+img/
+
+# Ignore tmp and cache folders
+tmp/
+
+
+# Ignore additional package and user data files
+files/tmp/additional_packages.txt
+files/tmp/network_data.txt
+files/tmp/user_data.txt
+
+# Ignore flask logs
+files/interface_gerencia/flask_logs.txt
+
+# Ignore any other files not part of source code
+# Add more patterns as needed for your project structure
