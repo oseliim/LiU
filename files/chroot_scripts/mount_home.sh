@@ -113,6 +113,19 @@ mount_home_from_ntfs(){
   local part_size_gb=$(($(lsblk -nbo SIZE "$ntfs_part" 2>/dev/null || echo 0) / 1024 / 1024 / 1024))
   log "[INFO] Tamanho da partição: ${part_size_gb}GB"
   
+  # Executar ntfsfix na partição antes de montar
+  log "[INFO] Executando ntfsfix na partição $ntfs_part..."
+  if command -v ntfsfix >/dev/null 2>&1; then
+    if ntfsfix -y "$ntfs_part" 2>/tmp/ntfsfix-error.log; then
+      log "[✅] ntfsfix executado com sucesso em $ntfs_part"
+    else
+      log "[WARN] ntfsfix retornou status de erro, mas prosseguindo com a montagem:"
+      sed -n '1,100p' /tmp/ntfsfix-error.log || true
+    fi
+  else
+    log "[WARN] ntfsfix não encontrado no sistema. Prosseguindo sem executá-lo."
+  fi
+  
   # Montar partição NTFS em /home
   log "[INFO] Montando $ntfs_part em /home..."
   if ! mount -t ntfs-3g "$ntfs_part" /home 2>/tmp/mount-home-ntfs-error.log; then
