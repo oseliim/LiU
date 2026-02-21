@@ -58,6 +58,11 @@ tmp/
 files/tmp/additional_packages.txt
 files/tmp/network_data.txt
 files/tmp/user_data.txt
+.venv
+
+# AI intructions
+.agents
+
 
 # Ignore flask logs
 files/interface_gerencia/flask_logs.txt
