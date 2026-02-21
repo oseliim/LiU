@@ -111,35 +111,35 @@ check_and_extract_windows() {
 # Iniciar container Docker
 start_container() {
     echo "🐳 Iniciando container Windows..."
-    
+
     if [ ! -d "$DOCKER_DIR" ]; then
         echo "❌ Diretório $DOCKER_DIR não encontrado!"
         exit 1
     fi
-    
+
     cd "$DOCKER_DIR"
-    
+
     echo "🔍 Verificando se o container 'windows' já existe..."
     if docker ps -a --format "table {{.Names}}" | grep -q "^windows$"; then
         echo "✅ Container 'windows' já existe"
     else
         echo "⚠️ Container 'windows' não existe, será criado pelo docker compose"
     fi
-    
+
     echo "🚀 Executando 'docker compose up -d'..."
     if ! docker compose up -d; then
         echo "❌ Erro: Falha ao executar 'docker compose up -d'"
         cd ..
         exit 1
     fi
-    
+
     echo "🔍 Verificando se o container foi criado..."
     if ! docker ps -a --format "table {{.Names}}" | grep -q "^windows$"; then
         echo "❌ Erro: Container 'windows' não foi criado pelo docker compose"
         cd ..
         exit 1
     fi
-    
+
     echo "🚀 Verificando status do container 'windows'..."
     if docker ps --format "table {{.Names}}" | grep -q "^windows$"; then
         echo "✅ Container 'windows' já está rodando"
@@ -151,61 +151,103 @@ start_container() {
             exit 1
         fi
     fi
-    
-    echo "⏳ Aguardando inicialização do container (60 segundos)..."
-    sleep 60
-    
+
+    # Monitorar logs até Windows estar 100% inicializado
+    wait_windows_ready
+
     echo "🔄 Status final do container:"
     docker ps
-    
+
     cd ..
 }
 
-# Função simplificada para conectar via RDP
+# Função para aguardar Windows 100% inicializado
+wait_windows_ready() {
+    echo "⏳ Aguardando Windows inicializar 100%..."
+    echo "🔍 Monitorando logs do container..."
+
+    local timeout=600  # 10 minutos de timeout máximo
+    local elapsed=0
+
+    while [ $elapsed -lt $timeout ]; do
+        # Procura pela mensagem de sucesso nos logs
+        if docker logs "$CONTAINER_NAME" 2>/dev/null | grep -q "Windows started successfully"; then
+            echo "✅ Windows inicializado com sucesso!"
+            echo "⏳ Aguardando mais 10 segundos para RDP ficar 100% pronto..."
+            sleep 10
+            return 0
+        fi
+
+        # Aguarda 10 segundos antes de próxima verificação
+        sleep 10
+        elapsed=$((elapsed + 10))
+        echo "⏳ Ainda aguardando... ($elapsed segundos)"
+    done
+
+    echo "❌ Timeout: Windows não iniciou em 10 minutos"
+    echo "💡 Verifique com: docker logs $CONTAINER_NAME"
+    return 1
+}
+
+# Função simplificada para conectar via RDP com retry
 connect_rdp() {
     echo "🌐 Obtendo endereço IP..."
     IP=$(get_local_ip)
     echo "📍 Usando IP: $IP"
-    
+
     # Obter ID do usuário atual
     USER_ID=$(id -u)
-    
+
     # Configurar variáveis de ambiente para o usuário atual
     export DISPLAY=":0"
     export XAUTHORITY="/home/$ACTUAL_USER/.Xauthority"
     export PULSE_SERVER="unix:/run/user/$USER_ID/pulse/native"
-    
-    echo "🔍 Verificando se o serviço RDP está acessível..."
-    if nc -z "$IP" "$RDP_PORT" 2>/dev/null; then
-        echo "✅ Serviço RDP detectado na porta $RDP_PORT"
-    else
-        echo "❌ Serviço RDP não encontrado na porta $RDP_PORT"
-        echo "💡 Verificando se o container está configurado corretamente..."
-        return 1
-    fi
-    
-    echo "🚀 Iniciando conexão RDP com xfreerdp..."
-    echo "📋 Comando: xfreerdp /v:$IP /u:$USERNAME /p:$PASSWORD /sound:sys:pulse /microphone /clipboard /f /dynamic-resolution +auto-reconnect /cert:ignore"
-    
-    # Executar xfreerdp diretamente
-    xfreerdp /v:"$IP" /u:"$USERNAME" /p:"$PASSWORD" \
-        /sound:sys:pulse \
-        /microphone \
-        /clipboard \
-        /f \
-        /dynamic-resolution \
-        +auto-reconnect \
-        /cert:ignore
-    
-    RDP_EXIT_CODE=$?
-    
-    if [ $RDP_EXIT_CODE -eq 0 ]; then
-        echo "✅ Conexão RDP encerrada normalmente"
-    else
-        echo "❌ Conexão RDP falhou com código de saída: $RDP_EXIT_CODE"
-        echo "💡 Tentando método alternativo..."
-        open_rdp_in_terminal
-    fi
+
+    # Tentar conectar RDP com retry a cada 10 segundos
+    local max_attempts=30  # 30 tentativas = 5 minutos
+    local attempt=0
+
+    echo "🔍 Testando conexão RDP (máximo 30 tentativas a cada 10 segundos)..."
+
+    while [ $attempt -lt $max_attempts ]; do
+        attempt=$((attempt + 1))
+
+        # Verificar se porta RDP está aberta
+        if nc -z "$IP" "$RDP_PORT" 2>/dev/null; then
+            echo "✅ [Tentativa $attempt] Serviço RDP detectado na porta $RDP_PORT"
+
+            echo "🚀 Iniciando conexão RDP com xfreerdp..."
+            echo "📋 Comando: xfreerdp /v:$IP /u:$USERNAME /p:$PASSWORD /sound:sys:pulse /microphone /clipboard /f /dynamic-resolution +auto-reconnect /cert:ignore"
+
+            # Executar xfreerdp diretamente
+            xfreerdp /v:"$IP" /u:"$USERNAME" /p:"$PASSWORD" \
+                /sound:sys:pulse \
+                /microphone \
+                /clipboard \
+                /f \
+                /dynamic-resolution \
+                +auto-reconnect \
+                /cert:ignore
+
+            RDP_EXIT_CODE=$?
+
+            if [ $RDP_EXIT_CODE -eq 0 ]; then
+                echo "✅ Conexão RDP encerrada normalmente"
+                return 0
+            else
+                echo "❌ Conexão RDP falhou com código de saída: $RDP_EXIT_CODE"
+                echo "💡 RDP pode estar iniciando, tentando novamente..."
+                sleep 10
+            fi
+        else
+            echo "⏳ [Tentativa $attempt/$max_attempts] Porta RDP não respondendo ainda, aguardando 10 segundos..."
+            sleep 10
+        fi
+    done
+
+    echo "❌ RDP não respondeu após 30 tentativas (5 minutos)"
+    echo "💡 Tentando método alternativo com terminal..."
+    open_rdp_in_terminal
 }
 
 # Função para abrir RDP em um terminal
