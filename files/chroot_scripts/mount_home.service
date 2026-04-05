@@ -4,10 +4,10 @@ After=local-fs.target
 Wants=network-online.target
 
 [Service]
-Type=simple
+Type=oneshot
 ExecStart=/usr/local/sbin/mount_home.sh
-Restart=on-failure
-RestartSec=10
+RemainAfterExit=yes
+TimeoutStartSec=300
 StandardOutput=syslog
 StandardError=syslog
 
