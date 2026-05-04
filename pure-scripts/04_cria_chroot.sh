@@ -21,21 +21,19 @@ if [ ! -e "$CHROOT_DIR/etc/os-release" ]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-FILES_DIR="$BASE_DIR/files"
 
-if [ -d "$FILES_DIR" ]; then
+if [ -d "$SCRIPT_DIR" ]; then
   mkdir -p "$CHROOT_DIR/usr/share/backgrounds"
-  cp "$FILES_DIR/LIFTO_WALLPAPER_LI_BLACK.jpg" "$CHROOT_DIR/usr/share/backgrounds/ltsp_wallpaper.jpg" 2>/dev/null || true
+  cp "$SCRIPT_DIR/LIFTO_WALLPAPER_LI_BLACK.jpg" "$CHROOT_DIR/usr/share/backgrounds/ltsp_wallpaper.jpg" 2>/dev/null || true
   mkdir -p "$CHROOT_DIR/usr/share/icons/Yaru/scalable/actions"
-  cp "$FILES_DIR/LIFTO_ICON.svg" "$CHROOT_DIR/usr/share/icons/Yaru/scalable/actions/view-app-grid-symbolic.svg" 2>/dev/null || true
+  cp "$SCRIPT_DIR/LIFTO_ICON.svg" "$CHROOT_DIR/usr/share/icons/Yaru/scalable/actions/view-app-grid-symbolic.svg" 2>/dev/null || true
 
-  cp "$FILES_DIR/apps_pre_install.sh" "$CHROOT_DIR/" 2>/dev/null || true
+  cp "$SCRIPT_DIR/apps_pre_install.sh" "$CHROOT_DIR/" 2>/dev/null || true
   if [ -f "$CHROOT_DIR/apps_pre_install.sh" ]; then
       chmod +x "$CHROOT_DIR/apps_pre_install.sh"
   fi
-  if [ -d "$FILES_DIR/tmp" ]; then
-      cp -r "$FILES_DIR/tmp" "$CHROOT_DIR/" 2>/dev/null || true
+  if [ -d "$SCRIPT_DIR/tmp" ]; then
+      cp -r "$SCRIPT_DIR/tmp" "$CHROOT_DIR/" 2>/dev/null || true
   fi
 fi
 
@@ -51,21 +49,21 @@ deb $MIRROR $UBUNTU_VERSION-updates main universe multiverse restricted
 deb $MIRROR $UBUNTU_VERSION-security main universe multiverse restricted
 EOF
 
-if [ -d "$FILES_DIR/chroot_scripts" ]; then
-  cp "$FILES_DIR/chroot_scripts/init_file" "$CHROOT_DIR/etc/init.d/ltsp-ssh-init" 2>/dev/null || true
+if [ -d "$SCRIPT_DIR/chroot_scripts" ]; then
+  cp "$SCRIPT_DIR/chroot_scripts/init_file" "$CHROOT_DIR/etc/init.d/ltsp-ssh-init" 2>/dev/null || true
   chmod 777 "$CHROOT_DIR/etc/init.d/ltsp-ssh-init" 2>/dev/null || true
   
-  cp "$FILES_DIR/chroot_scripts/desmonta_home.sh" "$CHROOT_DIR/bin/" 2>/dev/null || true
+  cp "$SCRIPT_DIR/chroot_scripts/desmonta_home.sh" "$CHROOT_DIR/bin/" 2>/dev/null || true
   chmod 755 "$CHROOT_DIR/bin/desmonta_home.sh" 2>/dev/null || true
   
-  cp "$FILES_DIR/chroot_scripts/d" "$CHROOT_DIR/usr/bin/" 2>/dev/null || true
+  cp "$SCRIPT_DIR/chroot_scripts/d" "$CHROOT_DIR/usr/bin/" 2>/dev/null || true
   chmod 777 "$CHROOT_DIR/usr/bin/d" 2>/dev/null || true
   
-  cp "$FILES_DIR/chroot_scripts/executa.sh" "$CHROOT_DIR/usr/bin/" 2>/dev/null || true
+  cp "$SCRIPT_DIR/chroot_scripts/executa.sh" "$CHROOT_DIR/usr/bin/" 2>/dev/null || true
   chmod 777 "$CHROOT_DIR/usr/bin/executa.sh" 2>/dev/null || true
   
-  cp "$FILES_DIR/chroot_scripts/mount_home.sh" "$CHROOT_DIR/usr/local/sbin/" 2>/dev/null || true
-  cp "$FILES_DIR/chroot_scripts/mount_home.service" "$CHROOT_DIR/etc/systemd/system/" 2>/dev/null || true
+  cp "$SCRIPT_DIR/chroot_scripts/mount_home.sh" "$CHROOT_DIR/usr/local/sbin/" 2>/dev/null || true
+  cp "$SCRIPT_DIR/chroot_scripts/mount_home.service" "$CHROOT_DIR/etc/systemd/system/" 2>/dev/null || true
 fi
 
 chroot "$CHROOT_DIR" /bin/bash -c "

@@ -18,18 +18,16 @@ fi
 ltsp image "$CHROOT_DIR" >/dev/null 2>&1
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-FILES_DIR="$BASE_DIR/files"
 
-if [ -f "$FILES_DIR/reinicia.sh" ]; then
-    bash "$FILES_DIR/reinicia.sh" >/dev/null 2>&1 || true
+if [ -f "$SCRIPT_DIR/reinicia.sh" ]; then
+    bash "$SCRIPT_DIR/reinicia.sh" >/dev/null 2>&1 || true
 else
     systemctl restart dnsmasq >/dev/null 2>&1 || true
     systemctl restart nfs-kernel-server >/dev/null 2>&1 || true
 fi
 
-if [ -f "$FILES_DIR/ipxe_menu.sh" ]; then
-    bash "$FILES_DIR/ipxe_menu.sh" >/dev/null 2>&1 || true
+if [ -f "$SCRIPT_DIR/ipxe_menu.sh" ]; then
+    bash "$SCRIPT_DIR/ipxe_menu.sh" >/dev/null 2>&1 || true
 else
     ltsp ipxe >/dev/null 2>&1 || true
 fi
