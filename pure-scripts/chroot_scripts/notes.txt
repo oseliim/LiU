@@ -1,0 +1,3 @@
+d fica no /usr/bin/
+executa.sh no /bin/
+init.d usao o /bin/executa.sh
