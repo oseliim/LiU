@@ -24,7 +24,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [ -d "$SCRIPT_DIR" ]; then
   mkdir -p "$CHROOT_DIR/usr/share/backgrounds"
-  cp "$SCRIPT_DIR/LIFTO_WALLPAPER_LI_BLACK.jpg" "$CHROOT_DIR/usr/share/backgrounds/ltsp_wallpaper.jpg" 2>/dev/null || true
+  cp "./LIFTO_WALLPAPER_LI_BLACK.jpg" "$CHROOT_DIR/usr/share/backgrounds/ltsp_wallpaper.jpg" 2>/dev/null || true
   mkdir -p "$CHROOT_DIR/usr/share/icons/Yaru/scalable/actions"
   cp "$SCRIPT_DIR/LIFTO_ICON.svg" "$CHROOT_DIR/usr/share/icons/Yaru/scalable/actions/view-app-grid-symbolic.svg" 2>/dev/null || true
 
