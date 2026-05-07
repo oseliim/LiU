@@ -1,0 +1,60 @@
+MENU RESOLUTION 1024 768
+
+MENU TITLE LIFTO
+UI isolinux/vesamenu.c32
+TIMEOUT 50
+F1 pxelinux.cfg/default
+
+MENU BACKGROUND Imagens/LIFTO_BLACK.png
+
+MENU COLOR title   5;36;44    #ffdddddd #00000000
+MENU COLOR sel     7;37;40    #ff000000 #ffffffff
+MENU COLOR unsel   37;44      #ffdddddd #00000000
+MENU COLOR timeout_msg  37;44 #ffaaaaff #00000000
+MENU COLOR timeout      1;37;44 #ffaaaaff #00000000
+
+MENU FONT /srv/tftp/ltsp/fonts/Arabic-Fixed16.psf
+
+LABEL -
+	MENU LABEL Boot da Imagem pela rede no modo LTSP:
+
+#LABEL x86_32
+#	MENU LABEL Ubuntu ^18.04 MATE (32 bit)
+#	TEXT HELP
+#		Boots /srv/ltsp/images/x86_32.img via NFS.
+#	ENDTEXT
+#	MENU INDENT 2
+#	KERNEL x86_32/vmlinuz
+#	APPEND root=/dev/nfs nfsroot=/srv/ltsp ltsp.image=images/x86_32.img loop.max_part=9
+#	INITRD ltsp.img,x86_32/initrd.img
+#	IPAPPEND 3
+
+LABEL ubuntu_jammy
+	MENU DEFAULT
+	MENU LABEL Ubuntu 22.04 MATE (64 bit)
+	TEXT HELP
+		Boots /srv/ltsp/images/ubuntu_jammy.img via NFS.
+	ENDTEXT
+	MENU INDENT 2
+	KERNEL ubuntu_jammy/vmlinuz
+	APPEND root=/dev/nfs nfsroot=/srv/ltsp ltsp.image=images/ubuntu_jammy.img loop.max_part=9
+	INITRD ltsp.img,ubuntu_jammy/initrd.img
+	IPAPPEND 3
+
+MENU SEPARATOR
+
+LABEL -
+	MENU LABEL Other options:
+	MENU DISABLE
+
+LABEL memtest86+
+	MENU LABEL Memory test
+	MENU INDENT 2
+	KERNEL memtest.0
+
+LABEL hd00
+	MENU LABEL Boot from the first local disk
+	MENU INDENT 2
+	LOCALBOOT 0
+
+MENU END

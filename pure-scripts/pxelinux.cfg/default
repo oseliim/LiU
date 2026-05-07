@@ -1,0 +1,73 @@
+MENU RESOLUTION 800 600
+NOESCAPE 1
+PROMPT 0
+ALLOWOPTIONS 0
+
+
+MENU TITLE
+UI isolinux/vesamenu.c32
+TIMEOUT 100
+F1 pxelinux.cfg/default
+
+MENU ROWS 5
+MENU ENDROW 0
+MENU VSHIFT 9
+MENU MARGIN 6
+MENU BORDERCOLOR 0
+MENU COLOR border 0 #00000000 #00000000 none
+MENU BACKGROUND pxelinux.cfg/Imagens/ipxe.png
+
+MENU COLOR sel 0 #ffffffff #00000000 none
+MENU COLOR title   5;36;44      #ff000000 #00ffffff
+MENU COLOR unsel   37;44        #ffaaaaaa #00000000
+MENU COLOR timeout_msg  37;44   #ffaaaaaa #00000000
+MENU COLOR timeout      1;37;44 #ffaaaaaa #00000000
+MENU TIMEOUTROW 16
+
+MENU FONT /srv/tftp/ltsp/fonts/Arabic-Fixed16.psf
+
+#LABEL -
+#	MENU LABEL Boot da Imagem pela rede no modo LTSP:
+
+#LABEL x86_32
+#	MENU LABEL Ubuntu ^18.04 MATE (32 bit)
+#	TEXT HELP
+#		Boots /srv/ltsp/images/x86_32.img via NFS.
+#	ENDTEXT
+#	MENU INDENT 2
+#	KERNEL x86_32/vmlinuz
+#	APPEND root=/dev/nfs nfsroot=/srv/ltsp ltsp.image=images/x86_32.img loop.max_part=9
+#	INITRD ltsp.img,x86_32/initrd.img
+#	IPAPPEND 3
+
+LABEL ubuntu_jammy
+	MENU DEFAULT
+	MENU LABEL Ubuntu 22.04
+	#TEXT HELP
+	#	Boots /srv/ltsp/images/ubuntuxfce_jammy.img via NFS.
+	#ENDTEXT
+	MENU INDENT 2
+	KERNEL ubuntuxfce_jammy/vmlinuz
+	APPEND root=/dev/nfs nfsroot=/srv/ltsp ltsp.image=images/ubuntuxfce_jammy.img loop.max_part=9
+	INITRD ltsp.img,ubuntuxfce_jammy/initrd.img
+	IPAPPEND 3
+
+
+MENU TABMSG Pressione ENTER
+#MENU SEPARATOR
+
+LABEL -
+	MENU LABEL Other options:
+	MENU DISABLE
+
+LABEL memtest86+
+	MENU LABEL Memory test
+	MENU INDENT 2
+	KERNEL memtest.0
+
+LABEL hd00
+	MENU LABEL Boot from the first local disk
+	MENU INDENT 2
+	LOCALBOOT 0
+
+MENU END
