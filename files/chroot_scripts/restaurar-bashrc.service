@@ -1,0 +1,13 @@
+[Unit]
+Description=Restaura o .bashrc do usuario para o padrao de fabrica
+After=local-fs.target
+
+
+[Service]
+Type=oneshot
+# Caminho onde o script deverá ficar no sistema final
+ExecStart=/usr/local/bin/restaurar_bashrc.sh
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target
