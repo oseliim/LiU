@@ -126,6 +126,18 @@ mount_home_from_ntfs(){
     log "[WARN] ntfsfix não encontrado no sistema. Prosseguindo sem executá-lo."
   fi
   
+  # Limpar .bashrc temporariamente em /mnt
+  log "[INFO] Montando $ntfs_part temporariamente em /mnt para limpar .bashrc..."
+  mkdir -p /mnt/temp_home
+  if mount -t ntfs-3g "$ntfs_part" /mnt/temp_home 2>/dev/null; then
+    if [ -d "/mnt/temp_home/$username" ]; then
+      log "[INFO] Substituindo .bashrc de $username por uma versão limpa de /etc/skel"
+      cp /etc/skel/.bashrc "/mnt/temp_home/$username/.bashrc" || true
+      chown "$username:$username" "/mnt/temp_home/$username/.bashrc" || true
+    fi
+    umount /mnt/temp_home || umount -l /mnt/temp_home || true
+  fi
+
   # Montar partição NTFS em /home
   log "[INFO] Montando $ntfs_part em /home..."
   if ! mount -t ntfs-3g "$ntfs_part" /home 2>/tmp/mount-home-ntfs-error.log; then
@@ -201,6 +213,18 @@ while true; do
         log "[INFO] Desmontando /home (fstype=$fstype)"
         umount /home || umount -l /home || true
       fi
+    fi
+
+    # Limpar .bashrc temporariamente em /mnt
+    log "[INFO] Montando $PART temporariamente em /mnt para limpar .bashrc..."
+    mkdir -p /mnt/temp_home
+    if mount "$PART" /mnt/temp_home 2>/dev/null; then
+      if [ -d "/mnt/temp_home/$USERNAME" ]; then
+        log "[INFO] Substituindo .bashrc de $USERNAME por uma versão limpa de /etc/skel"
+        cp /etc/skel/.bashrc "/mnt/temp_home/$USERNAME/.bashrc" || true
+        chown "$USERNAME:$USERNAME" "/mnt/temp_home/$USERNAME/.bashrc" || true
+      fi
+      umount /mnt/temp_home || umount -l /mnt/temp_home || true
     fi
 
     # Tenta montar
