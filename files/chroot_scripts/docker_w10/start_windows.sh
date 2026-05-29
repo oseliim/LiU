@@ -120,6 +120,10 @@ start_container() {
 
     cd "$COMPOSE_DIR"
 
+    log_info "Verificando e removendo containers antigos que possam estar atrapalhando..."
+    $DOCKER_COMPOSE down --remove-orphans 2>/dev/null || true
+    docker rm -f "$CONTAINER_NAME" w10 2>/dev/null || true
+
     if $REBUILD; then
         log_info "Modo rebuild: fazendo pull e recriando containers…"
         $DOCKER_COMPOSE pull || log_warn "Pull falhou (imagem pode já estar local)"
