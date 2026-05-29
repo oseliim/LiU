@@ -127,9 +127,22 @@ start_container() {
     if $REBUILD; then
         log_info "Modo rebuild: fazendo pull e recriando containers…"
         $DOCKER_COMPOSE pull || log_warn "Pull falhou (imagem pode já estar local)"
-        $DOCKER_COMPOSE up -d --build --force-recreate
+        if ! $DOCKER_COMPOSE up -d --build --force-recreate; then
+            log_warn "Erro no rebuild! Limpando snapshots corrompidos..."
+            docker system prune -a -f --volumes || true
+            $DOCKER_COMPOSE pull || true
+            $DOCKER_COMPOSE up -d --build --force-recreate
+        fi
     else
-        $DOCKER_COMPOSE up -d
+        if ! $DOCKER_COMPOSE up -d; then
+            log_warn "Falha ao iniciar. Possível snapshot/cache corrompido!"
+            log_info "Executando limpeza profunda (docker system prune)..."
+            docker system prune -a -f --volumes || true
+            log_info "Fazendo pull da imagem novamente..."
+            $DOCKER_COMPOSE pull || true
+            log_info "Tentando subir o container de novo..."
+            $DOCKER_COMPOSE up -d
+        fi
     fi
 
     log_ok "docker compose up -d concluído"
