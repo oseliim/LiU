@@ -269,9 +269,12 @@ connect_rdp() {
         /microphone
         /clipboard
         /f
-        /dynamic-resolution
+        /bpp:32
+        /gfx
+        /network:auto
         +auto-reconnect
         /cert:ignore
+        /relax-order-checks
     )
 
     log_info "Comando: ${cmd[*]}"
