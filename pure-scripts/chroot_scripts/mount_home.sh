@@ -126,16 +126,16 @@ mount_home_from_ntfs(){
     log "[WARN] ntfsfix não encontrado no sistema. Prosseguindo sem executá-lo."
   fi
   
-  # Limpar .bashrc temporariamente em /mnt
-  log "[INFO] Montando $ntfs_part temporariamente em /mnt para limpar .bashrc..."
-  mkdir -p /mnt/temp_home
-  if mount -t ntfs-3g "$ntfs_part" /mnt/temp_home 2>/dev/null; then
-    if [ -d "/mnt/temp_home/$username" ]; then
+  # Limpar .bashrc temporariamente em /mnt/home
+  log "[INFO] Montando $ntfs_part temporariamente em /mnt/home para limpar .bashrc..."
+  mkdir -p /mnt/home
+  if mount -t ntfs-3g "$ntfs_part" /mnt/home 2>/dev/null; then
+    if [ -d "/mnt/home/$username" ]; then
       log "[INFO] Substituindo .bashrc de $username por uma versão limpa de /etc/skel"
-      cp /etc/skel/.bashrc "/mnt/temp_home/$username/.bashrc" || true
-      chown "$username:$username" "/mnt/temp_home/$username/.bashrc" || true
+      cp /etc/skel/.bashrc "/mnt/home/$username/.bashrc" || true
+      chown "$username:$username" "/mnt/home/$username/.bashrc" || true
     fi
-    umount /mnt/temp_home || umount -l /mnt/temp_home || true
+    umount /mnt/home || umount -l /mnt/home || true
   fi
 
   # Montar partição NTFS em /home
@@ -215,16 +215,16 @@ while true; do
       fi
     fi
 
-    # Limpar .bashrc temporariamente em /mnt
-    log "[INFO] Montando $PART temporariamente em /mnt para limpar .bashrc..."
-    mkdir -p /mnt/temp_home
-    if mount "$PART" /mnt/temp_home 2>/dev/null; then
-      if [ -d "/mnt/temp_home/$USERNAME" ]; then
+    # Limpar .bashrc temporariamente em /mnt/home
+    log "[INFO] Montando $PART temporariamente em /mnt/home para limpar .bashrc..."
+    mkdir -p /mnt/home
+    if mount "$PART" /mnt/home 2>/dev/null; then
+      if [ -d "/mnt/home/$USERNAME" ]; then
         log "[INFO] Substituindo .bashrc de $USERNAME por uma versão limpa de /etc/skel"
-        cp /etc/skel/.bashrc "/mnt/temp_home/$USERNAME/.bashrc" || true
-        chown "$USERNAME:$USERNAME" "/mnt/temp_home/$USERNAME/.bashrc" || true
+        cp /etc/skel/.bashrc "/mnt/home/$USERNAME/.bashrc" || true
+        chown "$USERNAME:$USERNAME" "/mnt/home/$USERNAME/.bashrc" || true
       fi
-      umount /mnt/temp_home || umount -l /mnt/temp_home || true
+      umount /mnt/home || umount -l /mnt/home || true
     fi
 
     # Tenta montar

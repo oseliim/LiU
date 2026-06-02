@@ -47,16 +47,16 @@ if mountpoint -q /home; then
   fi
 fi
 
-# 4.5. Limpar .bashrc temporariamente em /mnt
-echo "[INFO] Montando $PART temporariamente em /mnt para limpar .bashrc..."
-mkdir -p /mnt/temp_home
-if mount "$PART" /mnt/temp_home 2>/dev/null; then
-  if [ -d "/mnt/temp_home/$USER" ]; then
+# 4.5. Limpar .bashrc temporariamente em /mnt/home
+echo "[INFO] Montando $PART temporariamente em /mnt/home para limpar .bashrc..."
+mkdir -p /mnt/home
+if mount "$PART" /mnt/home 2>/dev/null; then
+  if [ -d "/mnt/home/$USER" ]; then
     echo "[INFO] Substituindo .bashrc de $USER por uma versão limpa de /etc/skel"
-    cp /etc/skel/.bashrc "/mnt/temp_home/$USER/.bashrc" || true
-    chown "$USER:$USER" "/mnt/temp_home/$USER/.bashrc" || true
+    cp /etc/skel/.bashrc "/mnt/home/$USER/.bashrc" || true
+    chown "$USER:$USER" "/mnt/home/$USER/.bashrc" || true
   fi
-  umount /mnt/temp_home || umount -l /mnt/temp_home || true
+  umount /mnt/home || umount -l /mnt/home || true
 fi
 
 # 5. Montar partição escolhida em /home
