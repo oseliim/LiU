@@ -6,13 +6,7 @@
 
 #set -euo pipefail
 
-# ── Forçar execução como usuário comum ────────────────────────────────────────
-if [ "$EUID" -eq 0 ]; then
-    # Descobre o usuário real que invocou o sudo, ou cai para o dono do script
-    REAL_USER="${SUDO_USER:-$(stat -c '%U' "$0")}"
-    echo "[INFO] O script 2 foi executado como root. Trocando para o usuário comum: $REAL_USER"
-    exec sudo -u "$REAL_USER" -H "$0" "$@"
-fi
+# Execução de docker como sudo e xfreerdp como usuário comum
 
 # ── Configurações ─────────────────────────────────────────────────────────────
 COMPOSE_DIR="${HOME}/docker_windows10"
@@ -77,11 +71,11 @@ check_deps() {
     done
 
     # docker compose (plugin v2) ou docker-compose (v1)
-    if docker compose version &>/dev/null 2>&1; then
-        DOCKER_COMPOSE="docker compose"
+    if sudo docker compose version &>/dev/null 2>&1; then
+        DOCKER_COMPOSE="sudo docker compose"
         log_ok "docker compose (plugin) encontrado"
     elif command -v docker-compose &>/dev/null; then
-        DOCKER_COMPOSE="docker-compose"
+        DOCKER_COMPOSE="sudo docker-compose"
         log_ok "docker-compose (standalone) encontrado"
     else
         log_error "docker compose / docker-compose NÃO encontrado"
@@ -122,14 +116,14 @@ start_container() {
 
     log_info "Verificando e removendo containers antigos que possam estar atrapalhando..."
     $DOCKER_COMPOSE down --remove-orphans 2>/dev/null || true
-    docker rm -f "$CONTAINER_NAME" w10 2>/dev/null || true
+    sudo docker rm -f "$CONTAINER_NAME" w10 2>/dev/null || true
 
     if $REBUILD; then
         log_info "Modo rebuild: fazendo pull e recriando containers…"
         $DOCKER_COMPOSE pull || log_warn "Pull falhou (imagem pode já estar local)"
         if ! $DOCKER_COMPOSE up -d --build --force-recreate; then
             log_warn "Erro no rebuild! Limpando snapshots corrompidos..."
-            docker system prune -a -f --volumes || true
+            sudo docker system prune -a -f --volumes || true
             $DOCKER_COMPOSE pull || true
             $DOCKER_COMPOSE up -d --build --force-recreate
         fi
@@ -137,7 +131,7 @@ start_container() {
         if ! $DOCKER_COMPOSE up -d; then
             log_warn "Falha ao iniciar. Possível snapshot/cache corrompido!"
             log_info "Executando limpeza profunda (docker system prune)..."
-            docker system prune -a -f --volumes || true
+            sudo docker system prune -a -f --volumes || true
             log_info "Fazendo pull da imagem novamente..."
             $DOCKER_COMPOSE pull || true
             log_info "Tentando subir o container de novo..."
@@ -154,7 +148,7 @@ get_container_ip() {
     local ip=""
 
     # 1. docker inspect (mais confiável)
-    ip=$(docker inspect -f \
+    ip=$(sudo docker inspect -f \
         '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
         "$CONTAINER_NAME" 2>/dev/null | head -n1)
 
@@ -166,7 +160,7 @@ get_container_ip() {
     # 2. docker compose ps --format
     ip=$(cd "$COMPOSE_DIR" && \
         $DOCKER_COMPOSE ps -q "$CONTAINER_NAME" 2>/dev/null | \
-        xargs -r docker inspect -f \
+        xargs -r sudo docker inspect -f \
         '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
         2>/dev/null | head -n1)
 
@@ -260,7 +254,14 @@ connect_rdp() {
     local target="${ip}"
     [[ "$port" != "3389" ]] && target="${ip}:${port}"
 
-    local cmd=(
+    local cmd=()
+    if [ "$EUID" -eq 0 ]; then
+        local real_user="${SUDO_USER:-$(stat -c '%U' "$0")}"
+        log_info "Executando xfreerdp como usuário comum: $real_user"
+        cmd+=(sudo -u "$real_user" -H)
+    fi
+
+    cmd+=(
         xfreerdp
         /v:"${target}"
         /u:"${RDP_USER}"
