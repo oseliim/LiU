@@ -9,7 +9,12 @@
 # Execução de docker como sudo e xfreerdp como usuário comum
 
 # ── Configurações ─────────────────────────────────────────────────────────────
-COMPOSE_DIR="${HOME}/docker_windows10"
+if [ "$EUID" -eq 0 ] && [ -n "$SUDO_USER" ]; then
+    USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+else
+    USER_HOME="$HOME"
+fi
+COMPOSE_DIR="${USER_HOME}/docker_windows10"
 CONTAINER_NAME="windows"           # nome do serviço/container no compose
 RDP_USER="aluno"
 RDP_PASS="aluno"
