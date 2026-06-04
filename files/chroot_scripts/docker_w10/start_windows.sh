@@ -266,7 +266,7 @@ connect_rdp() {
         /v:"${target}"
         /u:"${RDP_USER}"
         /p:"${RDP_PASS}"
-        /sound:sys:pulse
+        /sound:sys:alsa
         /microphone
         /clipboard
         /f
