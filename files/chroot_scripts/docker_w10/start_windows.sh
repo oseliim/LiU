@@ -286,14 +286,34 @@ connect_rdp() {
     log_info "Comando: ${cmd[*]}"
     echo ""
 
-    # Executa o xfreerdp — quando o usuário fechar a janela, o script termina
-    "${cmd[@]}" || {
-        local exit_code=$?
-        # xfreerdp retorna != 0 em desconexões normais; só alerta se grave
-        if (( exit_code > 1 )); then
-            log_warn "xfreerdp encerrou com código ${exit_code}"
+    # Executa o xfreerdp com mecanismo de retry para erros críticos
+    local max_attempts=4  # 1 tentativa inicial + 3 retentativas
+    local attempt=1
+    local exit_code=0
+
+    while (( attempt <= max_attempts )); do
+        if (( attempt > 1 )); then
+            log_warn "Tentando novamente conectar via RDP (Tentativa ${attempt}/${max_attempts}) em 5 segundos..."
+            sleep 5
         fi
-    }
+
+        # Executa o xfreerdp — quando o usuário fechar a janela, o script termina
+        "${cmd[@]}"
+        exit_code=$?
+
+        # xfreerdp retorna != 0 em desconexões normais; só alerta/retenta se grave
+        if (( exit_code <= 1 )); then
+            break
+        fi
+
+        log_error "xfreerdp encerrou com erro crítico (código ${exit_code})."
+        (( attempt++ ))
+    done
+
+    if (( exit_code > 1 )); then
+        log_error "Falha persistente ao conectar via RDP após $((attempt - 1)) tentativas."
+        return "$exit_code"
+    fi
 }
 
 # ── Limpeza ao sair ────────────────────────────────────────────────────────────
