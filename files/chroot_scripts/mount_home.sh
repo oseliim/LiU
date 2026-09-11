@@ -155,7 +155,10 @@ mount_home_from_ntfs(){
     cp -rT /etc/skel "/home/$username" || true
   fi
   
-  chown -R "$username:$username" "/home/$username" || true
+  if ! chown -R "$username:$username" "/home/$username" 2>/tmp/chown-error.log; then
+    log "[WARN] chown com falhas parciais, ver detalhes:"
+    cat /tmp/chown-error.log
+  fi
   
   # Atualizar XDG dirs
   if command -v xdg-user-dirs-update >/dev/null 2>&1; then
@@ -239,7 +242,10 @@ while true; do
         cp -rT /etc/skel "/home/$USERNAME" || true
       fi
 
-      chown -R "$USERNAME:$USERNAME" "/home/$USERNAME" || true
+      if ! chown -R "$USERNAME:$USERNAME" "/home/$USERNAME" 2>/tmp/chown-error.log; then
+        log "[WARN] chown com falhas parciais, ver detalhes:"
+        cat /tmp/chown-error.log
+      fi
 
       # Atualizar XDG dirs (rodar como usuário)
       if command -v xdg-user-dirs-update >/dev/null 2>&1; then
