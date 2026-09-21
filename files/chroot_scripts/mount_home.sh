@@ -1,10 +1,42 @@
 #!/bin/bash
-set -euo pipefail
+# NÃO usar set -e: script de retry-loop deve continuar mesmo com erros parciais
+set -u
 
 log(){ echo "[$(date +'%F %T')] $*"; }
 
 # Intervalo entre tentativas (segundos)
 RETRY_INTERVAL=10
+
+# Máximo de tentativas esperando dispositivos aparecerem (60 × 10s = 10 min)
+MAX_DEVICE_RETRIES=60
+device_retry_count=0
+
+# Função que detecta o usuário real com múltiplos fallbacks
+detect_username(){
+  local user=""
+
+  # 1) Tenta via 'who' (funciona se houver sessão TTY/pts)
+  user=$(who 2>/dev/null | awk '{print $1}' | grep -vE '^(root|nobody|systemd)' | head -n1 || true)
+  if [ -n "$user" ]; then echo "$user"; return 0; fi
+
+  # 2) Tenta via loginctl (funciona com sessões gráficas)
+  user=$(loginctl list-users --no-legend 2>/dev/null | awk '{print $2}' | grep -vE '^(root|nobody|systemd)' | head -n1 || true)
+  if [ -n "$user" ]; then echo "$user"; return 0; fi
+
+  # 3) Deriva do hostname (ex: LabDes16 → labdes16)
+  local hn
+  hn=$(hostname 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
+  if [ -n "$hn" ] && id "$hn" &>/dev/null; then
+    echo "$hn"; return 0
+  fi
+
+  # 4) Primeiro usuário não-sistema em /etc/passwd (UID >= 1000)
+  user=$(awk -F: '$3 >= 1000 && $3 < 65534 && $1 != "nobody" {print $1; exit}' /etc/passwd 2>/dev/null || true)
+  if [ -n "$user" ]; then echo "$user"; return 0; fi
+
+  # Nenhum encontrado
+  return 1
+}
 
 # Função que retorna lista de partições ext4 não montadas (device full path)
 get_unmounted_ext4_parts(){
@@ -182,8 +214,8 @@ while true; do
   if [ "${#parts[@]}" -gt 0 ]; then
     log "[INFO] Partições ext4 não montadas encontradas. Processando..."
     
-    # Detecta usuário real (ignora root/nobody/systemd)
-    USERNAME=$(who | awk '{print $1}' | grep -vE '^(root|nobody|systemd)' | head -n1 || true)
+    # Detecta usuário real (múltiplos fallbacks)
+    USERNAME=$(detect_username || true)
 
     if [ -z "$USERNAME" ]; then
       log "[INFO] Nenhum usuário detectado no momento. Aguardando..."
@@ -270,14 +302,20 @@ while true; do
   ntfs_parts=( $(get_unmounted_ntfs_parts) )
   
   if [ "${#ntfs_parts[@]}" -eq 0 ]; then
-    log "[INFO] Nenhuma partição NTFS não montada encontrada. Encerrando serviço."
-    exit 0
+    device_retry_count=$((device_retry_count + 1))
+    if [ "$device_retry_count" -ge "$MAX_DEVICE_RETRIES" ]; then
+      log "[WARN] Nenhuma partição encontrada após $MAX_DEVICE_RETRIES tentativas. Encerrando serviço."
+      exit 0
+    fi
+    log "[INFO] Nenhuma partição encontrada (tentativa $device_retry_count/$MAX_DEVICE_RETRIES). Aguardando dispositivos..."
+    sleep "$RETRY_INTERVAL"
+    continue
   fi
   
   log "[INFO] Partições NTFS não montadas encontradas: ${#ntfs_parts[@]}"
   
-  # Detecta usuário real
-  USERNAME=$(who | awk '{print $1}' | grep -vE '^(root|nobody|systemd)' | head -n1 || true)
+  # Detecta usuário real (múltiplos fallbacks)
+  USERNAME=$(detect_username || true)
 
   if [ -z "$USERNAME" ]; then
     log "[INFO] Nenhum usuário detectado no momento. Aguardando..."
